@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Gradle: __local_aars__:D.\Tsinghua\graduationProject\temp\gps-measurement-tools\GNSSLogger\pseudorange\libs\protobuf-nano.jar:unspecified@jar">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/pseudorange/libs/protobuf-nano.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
