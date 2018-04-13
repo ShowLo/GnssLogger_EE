@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+/*
+ * modified by Chen Jiarong, Department of Electronic Engineering, Tsinghua University
+ */
+
 package com.google.android.apps.location.gps.gnsslogger_ee;
 
 import android.app.Activity;

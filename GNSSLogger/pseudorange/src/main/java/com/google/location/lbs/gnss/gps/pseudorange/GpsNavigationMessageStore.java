@@ -181,7 +181,6 @@ public class GpsNavigationMessageStore {
       ArrayList<GpsEphemerisProto> gpsEphemerisProtoList = new ArrayList<>();
       for (int i = 0; i < MAX_NUMBER_OF_SATELLITES; i++) {
         if (fullyDecodedIntermediateEphemerides[i] != null) {
-          Log.d("测试解调", "第" + (i + 1) + "卫星的星历加入列表");
           gpsEphemerisProtoList.add(fullyDecodedIntermediateEphemerides[i].getEphemerisObj());
         }
       }
@@ -198,8 +197,6 @@ public class GpsNavigationMessageStore {
    * Handles a fresh Navigation Message. The message is in its raw format.
    */
   public void onNavMessageReported(byte prn, byte type, short id, byte[] rawData) {
-    if(rawData == null)
-      Log.d("测试解调","rawData为空");
     Preconditions.checkArgument(type == 1, "Unsupported NavigationMessage Type: " + type);
     Preconditions.checkArgument(
         rawData != null && rawData.length == L1_CA_MESSAGE_LENGTH_BYTES,
@@ -208,19 +205,15 @@ public class GpsNavigationMessageStore {
       switch (id) {
         case 1:
           handleFirstSubframe(prn, rawData);
-          Log.d("测试解调", "第1个subframe");
           break;
         case 2:
           handleSecondSubframe(prn, rawData);
-          Log.d("测试解调", "第2个subframe");
           break;
         case 3:
           handleThirdSubframe(prn, rawData);
-          Log.d("测试解调", "第3个subframe");
           break;
         case 4:
           handleFourthSubframe(rawData);
-          Log.d("测试解调", "第4个subframe");
           break;
         case 5:
           break;
@@ -242,7 +235,6 @@ public class GpsNavigationMessageStore {
     IntermediateEphemeris intermediateEphemeris =
         findIntermediateEphemerisToUpdate(prn, SUBFRAME_1, iodc);
     if (intermediateEphemeris == null) {
-      Log.d("update", "已经up to date");
       // we are up-to-date
       return;
     }
@@ -281,7 +273,6 @@ public class GpsNavigationMessageStore {
     af0 = getTwoComplement(af0, AF0_LENGTH);
     gpsEphemerisProto.af0 = af0 * POW_2_NEG_31;
 
-    Log.d("测试解调:", "第一个subframe解调好了");
 
     updateDecodedState(prn, SUBFRAME_1, intermediateEphemeris);
   }
@@ -439,7 +430,6 @@ public class GpsNavigationMessageStore {
 
     decodedIonosphericObj = ionosphericModelProto;
 
-    Log.d("测试解调","第4帧解好了");
   }
 
   /**
@@ -453,10 +443,8 @@ public class GpsNavigationMessageStore {
     if (intermediateEphemeris.isFullyDecoded()) {
       partiallyDecodedIntermediateEphemerides[prn - 1] = null;
       fullyDecodedIntermediateEphemerides[prn - 1] = intermediateEphemeris;
-      Log.d("更新解调状态",prn + "的卫星解调好了");
     } else {
       partiallyDecodedIntermediateEphemerides[prn - 1] = intermediateEphemeris;
-      Log.d("更新解调状态", prn + "的卫星部分解调");
     }
   }
 

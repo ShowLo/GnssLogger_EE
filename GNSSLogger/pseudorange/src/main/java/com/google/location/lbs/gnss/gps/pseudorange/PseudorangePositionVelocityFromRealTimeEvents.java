@@ -143,7 +143,8 @@ public class PseudorangePositionVelocityFromRealTimeEvents {
                 measurement.getPseudorangeRateMetersPerSecond(),
                 measurement.getCn0DbHz(),
                 measurement.getAccumulatedDeltaRangeUncertaintyMeters(),
-                measurement.getPseudorangeRateUncertaintyMetersPerSecond());
+                measurement.getPseudorangeRateUncertaintyMetersPerSecond(),
+                measurement.getTimeOffsetNanos());
         mUsefulSatellitesToReceiverMeasurements[measurement.getSvid() - 1] = gpsReceiverMeasurement;
       }
     }

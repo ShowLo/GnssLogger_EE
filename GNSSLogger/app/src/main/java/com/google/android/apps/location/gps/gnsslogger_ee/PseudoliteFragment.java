@@ -38,33 +38,25 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.BufferedWriter;
-import java.io.File;
-
 /** The UI fragment that hosts a logging view. */
 public class PseudoliteFragment extends Fragment {
 
   private TextView mLogView;
   private ScrollView mScrollView;
-  private UiLoggerPseudolite mUiLoggerPseudolite;
   private FileLoggerPseudolite mFileLoggerPseudolite;
   private Button mStartLog;
   private Button mStopLog;
 
-  private static boolean autoScroll = false;
+  private PseudolitePositionCalculator mPseudolitePositionCalculator;
 
   private final UiPseudoliteFragmentComponent mUiComponent = new UiPseudoliteFragmentComponent();
-
-  public void setUiLogger(UiLoggerPseudolite value) {
-    mUiLoggerPseudolite = value;
-  }
 
   public void setFileLoggerPseudolite(FileLoggerPseudolite value) {
     mFileLoggerPseudolite = value;
   }
 
-  public FileLoggerPseudolite getFileLoggerPseudolite() {
-    return mFileLoggerPseudolite;
+  public void setPseudolitePositionCalculator(PseudolitePositionCalculator value) {
+    mPseudolitePositionCalculator = value;
   }
 
   @Override
@@ -85,9 +77,10 @@ public class PseudoliteFragment extends Fragment {
     mLogView = (TextView) newView.findViewById(R.id.log_view);
     mScrollView = (ScrollView) newView.findViewById(R.id.log_scroll);
 
-    UiLoggerPseudolite currentUiLoggerPseudolite = mUiLoggerPseudolite;
-    if (currentUiLoggerPseudolite != null) {
-      currentUiLoggerPseudolite.setUiPseudoliteFragmentComponent(mUiComponent);
+    PseudolitePositionCalculator currentPseudolitePositionCalculator =
+        mPseudolitePositionCalculator;
+    if (currentPseudolitePositionCalculator != null) {
+      currentPseudolitePositionCalculator.setUiPseudoliteComponent(mUiComponent);
     }
 
     Button start = (Button) newView.findViewById(R.id.start_log);
@@ -119,7 +112,7 @@ public class PseudoliteFragment extends Fragment {
         });
 
     mStartLog = (Button) newView.findViewById(R.id.start_logs);
-    mStopLog = (Button) newView.findViewById(R.id.stop_log);
+    mStopLog = (Button) newView.findViewById(R.id.stop_logs);
 
     enableOptions(true /* start */);
 

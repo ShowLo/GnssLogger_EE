@@ -45,11 +45,14 @@ class GpsMeasurement {
 
   /** Pseudorange rate uncertainty (meter per seconds) */
   public final double pseudorangeRateUncertaintyMps;
+
+  /** time offset (Nano seconds) */
+  public final double timeOffsetNanos;
   
   public GpsMeasurement(long arrivalTimeSinceGpsWeekNs, double accumulatedDeltaRangeMeters,
       boolean validAccumulatedDeltaRangeMeters, double pseudorangeRateMps,
       double signalToNoiseRatioDb, double accumulatedDeltaRangeUncertaintyMeters,
-      double pseudorangeRateUncertaintyMps) {
+      double pseudorangeRateUncertaintyMps, double timeOffsetNanos) {
     this.arrivalTimeSinceGpsWeekNs = arrivalTimeSinceGpsWeekNs;
     this.accumulatedDeltaRangeMeters = accumulatedDeltaRangeMeters;
     this.validAccumulatedDeltaRangeMeters = validAccumulatedDeltaRangeMeters;
@@ -57,12 +60,13 @@ class GpsMeasurement {
     this.signalToNoiseRatioDb = signalToNoiseRatioDb;
     this.accumulatedDeltaRangeUncertaintyMeters = accumulatedDeltaRangeUncertaintyMeters;
     this.pseudorangeRateUncertaintyMps = pseudorangeRateUncertaintyMps;
+    this.timeOffsetNanos = timeOffsetNanos;
   }  
 
   protected GpsMeasurement(GpsMeasurement another) {
     this(another.arrivalTimeSinceGpsWeekNs, another.accumulatedDeltaRangeMeters,
         another.validAccumulatedDeltaRangeMeters, another.pseudorangeRateMps,
         another.signalToNoiseRatioDb, another.accumulatedDeltaRangeUncertaintyMeters,
-        another.pseudorangeRateUncertaintyMps);
+        another.pseudorangeRateUncertaintyMps, another.timeOffsetNanos);
   } 
 }

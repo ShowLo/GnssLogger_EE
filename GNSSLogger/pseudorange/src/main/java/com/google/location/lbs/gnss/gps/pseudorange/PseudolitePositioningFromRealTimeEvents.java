@@ -30,15 +30,18 @@ import android.location.cts.nano.Ephemeris.GpsNavMessageProto;
 import android.location.cts.suplClient.SuplRrlpController;
 import android.util.Log;
 
-import com.google.location.lbs.gnss.gps.pseudorange.Ecef2LlaConverter.GeodeticLlaValues;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Helper class for calculating Gps position and velocity solution using weighted least squares
@@ -46,9 +49,9 @@ import java.util.List;
  * doppler smoothing, carrier phase smoothing or no smoothing.
  *
  */
-public class PseudorangePositionFromRealTimeEvents {
+public class PseudolitePositioningFromRealTimeEvents {
 
-  private static final String TAG = "PseudorangePositionFromRealTimeEvents";
+  private static final String TAG = "PseudolitePositioningFromRealTimeEvents";
   private static final double SECONDS_PER_NANO = 1.0e-9;
   private static final int TOW_DECODED_MEASUREMENT_STATE_BIT = 3;
   /** Average signal travel time from GPS satellite and earth */
@@ -60,29 +63,34 @@ public class PseudorangePositionFromRealTimeEvents {
 
   // navigation message parser
   private GpsNavigationMessageStore mGpsNavigationMessageStore = new GpsNavigationMessageStore();
-  private double[] mPositionSolutionLatLngDeg = GpsMathOperations.createAndFillArray(3, Double.NaN);
+  private double[] mPseudolitePositioningSolutionXYZ = GpsMathOperations.createAndFillArray(3, Double.NaN);
   private boolean mFirstUsefulMeasurementSet = true;
-  // private int[] mReferenceLocation = null;
+  private int[] mReferenceLocation = null;
+  private long mLastReceivedSuplMessageTimeMillis = 0;
+  private long mDeltaTimeMillisToMakeSuplRequest = TimeUnit.MINUTES.toMillis(30);
+  private boolean mFirstSuplRequestNeeded = true;
   private GpsNavMessageProto mGpsNavMessageProtoUsed = null;
 
+  // information of pseudolites 伪卫星信息
+  private PseudoliteMessageStore mPseudoliteMessageStore = new PseudoliteMessageStore();
+
+  // API KEY
   private String elevationApiKey = "AIzaSyC3KoyXGV0yxGKEvT-WU1ioz64wzlXoUDY";
 
   // Only the interface of pseudorange smoother is provided. Please implement customized smoother.
   PseudorangeSmoother mPseudorangeSmoother = new PseudorangeNoSmoothingSmoother();
-  private final UserPositionWeightedLeastSquare mUserPositionLeastSquareCalculator =
-      new UserPositionWeightedLeastSquare(mPseudorangeSmoother, elevationApiKey);
+  private final PseudolitePositioningLeastSquare mPseudolitePositioningLeastSquareCalculator =
+      new PseudolitePositioningLeastSquare(mPseudorangeSmoother, elevationApiKey);
   private GpsMeasurement[] mUsefulSatellitesToReceiverMeasurements =
       new GpsMeasurement[GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES];
   private Long[] mUsefulSatellitesToTowNs =
       new Long[GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES];
-  // private long mLargestTowNs = Long.MIN_VALUE;
-  private double biasNanos = 0.0;
+  private long mLargestTowNs = Long.MIN_VALUE;
   private double mArrivalTimeSinceGPSWeekNs = 0.0;
   private int mDayOfYear1To366 = 0;
   private int mGpsWeekNumber = 0;
   private long mArrivalTimeSinceGpsEpochNs = 0;
 
-  private int[] mReferenceLocation = null;
 
   private static final String SUPL_SERVER_NAME = "supl.google.com";
   private static final int SUPL_SERVER_PORT = 7276;
@@ -90,19 +98,22 @@ public class PseudorangePositionFromRealTimeEvents {
   /**
    * Computes Weighted least square position solutions from a received {@link
    * GnssMeasurementsEvent} and store the result in {@link
-   * PseudorangePositionFromRealTimeEvents#mPositionSolutionLatLngDeg}
+   * PseudolitePositioningFromRealTimeEvents#mPseudolitePositioningSolutionXYZ}
    */
-  public void computePositionSolutionsFromRawMeas(GnssMeasurementsEvent event)
+  public void computePseudolitePositioningSolutionsFromRawMeas(GnssMeasurementsEvent event)
       throws Exception {
+
     for (int i = 0; i < GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES; i++) {
       mUsefulSatellitesToReceiverMeasurements[i] = null;
       mUsefulSatellitesToTowNs[i] = null;
     }
 
     GnssClock gnssClock = event.getClock();
-    // 这里得到的是当前时间相对于1980.1.6零点的时间
+    // 这里得到的是当前时间相对于1980.1.6零点的时间，也就是GPS时间
     mArrivalTimeSinceGpsEpochNs = gnssClock.getTimeNanos() - gnssClock.getFullBiasNanos();
-    biasNanos = gnssClock.getBiasNanos();
+    double biasNanos = gnssClock.getBiasNanos();
+
+    Map<Integer, Double> map = new HashMap<>();
 
     for (GnssMeasurement measurement : event.getMeasurements()) {
       // ignore any measurement if it is not from GPS constellation
@@ -128,9 +139,9 @@ public class PseudorangePositionFromRealTimeEvents {
         mDayOfYear1To366 = cal.get(Calendar.DAY_OF_YEAR);
 
         long receivedGPSTowNs = measurement.getReceivedSvTimeNanos();
-        /*if (receivedGPSTowNs > mLargestTowNs) {
+        if (receivedGPSTowNs > mLargestTowNs) {
           mLargestTowNs = receivedGPSTowNs;
-        }*/
+        }
         mUsefulSatellitesToTowNs[measurement.getSvid() - 1] = receivedGPSTowNs;
         GpsMeasurement gpsReceiverMeasurement =
             new GpsMeasurement(
@@ -143,87 +154,107 @@ public class PseudorangePositionFromRealTimeEvents {
                 measurement.getPseudorangeRateUncertaintyMetersPerSecond(),
                 measurement.getTimeOffsetNanos());
         mUsefulSatellitesToReceiverMeasurements[measurement.getSvid() - 1] = gpsReceiverMeasurement;
-        Log.d("测试解调",measurement.getSvid()+"卫星的measurement加入");
+        map.put(measurement.getSvid() - 1, measurement.getCn0DbHz());
+        Log.d("Pseudolite Positioning","The measurement of satellite " + measurement.getSvid() +
+            " was added to gpsReceiverMeasurement");
       }
     }
 
-    // check if we can use the navigation message from the device
-    boolean canUse =
-        canUsingNavMessageFromDevice(
-            mUsefulSatellitesToReceiverMeasurements, mHardwareGpsNavMessageProto);
-    if (canUse) {
-      Log.d(TAG, "Using navigation message from the GPS receiver");
-      mGpsNavMessageProtoUsed = mHardwareGpsNavMessageProto;
-    } else {
-      Log.d(TAG, "Received less than four visible satellites' ephemerides ..."
-                      + "no position is calculated using navigation message.");
-      Log.d(TAG, "So we have to use navigation message from SUPL server");
-      if (mReferenceLocation == null) {
-        Log.d(TAG, "The reference location is null, so we cannot get navigaion"
-                      + "message from SUPL server.");
-        return;
-      } else {
-        mGpsNavMessageProtoUsed = getSuplNavMessage(mReferenceLocation[0], mReferenceLocation[1]);
-        Log.d(TAG, "Now we have got navigation message from SUPL server.");
+    // A few of satellites with the highest SNR is kept,
+    // the number of which is the same as the number of pseudolites
+    // 保留信噪比最高的几个卫星，其数量跟伪卫星数量一样
+    int pseudoliteNum = mPseudoliteMessageStore.getIndoorAntennasXyz().length;
+    List<Map.Entry<Integer, Double>> list = new ArrayList<Map.Entry<Integer, Double>>(map.entrySet());
+    Collections.sort(list, new Comparator<Map.Entry<Integer, Double>>() {
+      @Override
+      public int compare(Map.Entry<Integer, Double> o1, Map.Entry<Integer, Double> o2) {
+        return o2.getValue().compareTo(o1.getValue());
+      }
+    });
+    int count = 0;
+    for (Map.Entry<Integer, Double> item : list) {
+      ++count;
+      // 去掉可能收到的不是伪卫星发出的信号
+      if (count > pseudoliteNum) {
+        mUsefulSatellitesToReceiverMeasurements[item.getKey()] = null;
+        mUsefulSatellitesToTowNs[item.getKey()] = null;
       }
     }
-
-    // remove those visible satellites without useful ephemeris
-    for (int i = 0; i < GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES; i++) {
-      if (mUsefulSatellitesToReceiverMeasurements[i] != null
-          && !navMessageProtoContainsSvid(mGpsNavMessageProtoUsed, i + 1)) {
-        mUsefulSatellitesToReceiverMeasurements[i] = null;
-        mUsefulSatellitesToTowNs[i] = null;
-      }
-    }
-
-    // calculate the number of useful satellites
-    int numberOfUsefulSatellites = 0;
-    for (GpsMeasurement element : mUsefulSatellitesToReceiverMeasurements) {
-      if (element != null) {
-        numberOfUsefulSatellites++;
-      }
-    }
-
-    if (numberOfUsefulSatellites < MINIMUM_NUMBER_OF_USEFUL_SATELLITES) {
-      Log.d(TAG, "Less than 4 useful measurements, so no position calculated.");
-      mPositionSolutionLatLngDeg = GpsMathOperations.createAndFillArray(3, Double.NaN);
+    // 没有收到所有伪卫星的数据，停止计算
+    if (count < pseudoliteNum) {
+      Log.d(TAG, "Do not receive all the measurements from pseudolites, stop calculating.");
       return;
     }
 
+    // check if we should continue using the navigation message from the SUPL server, or use the
+    // navigation message from the device if we fully received it
+    boolean useNavMessageFromSupl =
+        continueUsingNavMessageFromSupl(
+            mUsefulSatellitesToReceiverMeasurements, mHardwareGpsNavMessageProto);
+    if (useNavMessageFromSupl) {
+      Log.d(TAG, "Using navigation message from SUPL server");
+
+      if (mFirstSuplRequestNeeded
+          || (System.currentTimeMillis() - mLastReceivedSuplMessageTimeMillis)
+          > mDeltaTimeMillisToMakeSuplRequest) {
+        // The following line is blocking call for SUPL connection and back. But it is fast enough
+        mGpsNavMessageProtoUsed = getSuplNavMessage(mReferenceLocation[0], mReferenceLocation[1]);
+        if (!isEmptyNavMessage(mGpsNavMessageProtoUsed)) {
+          mFirstSuplRequestNeeded = false;
+          mLastReceivedSuplMessageTimeMillis = System.currentTimeMillis();
+        } else {
+          return;
+        }
+      }
+    } else {
+      Log.d(TAG, "Using navigation message from the GPS receiver");
+      mGpsNavMessageProtoUsed = mHardwareGpsNavMessageProto;
+    }
+
+    // 仍然有可见卫星没有对应的星历，停止计算
+    for (int i = 0; i < GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES; i++) {
+      if (mUsefulSatellitesToReceiverMeasurements[i] != null
+          && !navMessageProtoContainsSvid(mGpsNavMessageProtoUsed, i + 1)) {
+        Log.d(TAG, "There are visible satellites without useful ephemeris, stop calculating");
+        return;
+      }
+    }
+
     if (!mFirstUsefulMeasurementSet) {
-      // start with last known position of zero. Following the structure:
+      // start with last known position and velocity of zero. Following the structure:
       // [X position, Y position, Z position, clock bias]
-      double[] positionVelocitySolutionEcef = GpsMathOperations.createAndFillArray(4, 0);
-      performPositionComputationEcef(
-              mUserPositionLeastSquareCalculator,
+      double[] positionSolution = GpsMathOperations.createAndFillArray(4, 0);
+      performPseudolitePositioningComputation(
+              mPseudoliteMessageStore,
+              mPseudolitePositioningLeastSquareCalculator,
               mUsefulSatellitesToReceiverMeasurements,
               mUsefulSatellitesToTowNs,
               biasNanos,
               mArrivalTimeSinceGPSWeekNs,
               mDayOfYear1To366,
               mGpsWeekNumber,
-              positionVelocitySolutionEcef);
-      // convert the position solution from ECEF to latitude, longitude and altitude
-      GeodeticLlaValues latLngAlt =
-              Ecef2LlaConverter.convertECEFToLLACloseForm(
-                      positionVelocitySolutionEcef[0],
-                      positionVelocitySolutionEcef[1],
-                      positionVelocitySolutionEcef[2]);
-      mPositionSolutionLatLngDeg[0] = Math.toDegrees(latLngAlt.latitudeRadians);
-      mPositionSolutionLatLngDeg[1] = Math.toDegrees(latLngAlt.longitudeRadians);
-      mPositionSolutionLatLngDeg[2] = latLngAlt.altitudeMeters;
+              positionSolution);
+
+      mPseudolitePositioningSolutionXYZ[0] = positionSolution[0];
+      mPseudolitePositioningSolutionXYZ[1] = positionSolution[1];
+      mPseudolitePositioningSolutionXYZ[2] = positionSolution[2];
 
       Log.d(
               TAG,
-              "Latitude, Longitude, Altitude: "
-                      + mPositionSolutionLatLngDeg[0]
+              "X, Y, Z: "
+                      + mPseudolitePositioningSolutionXYZ[0]
                       + " "
-                      + mPositionSolutionLatLngDeg[1]
+                      + mPseudolitePositioningSolutionXYZ[1]
                       + " "
-                      + mPositionSolutionLatLngDeg[2]);
+                      + mPseudolitePositioningSolutionXYZ[2]);
     }
     mFirstUsefulMeasurementSet = false;
+  }
+
+  private boolean isEmptyNavMessage(GpsNavMessageProto navMessageProto) {
+    if(navMessageProto.iono == null)return true;
+    if(navMessageProto.ephemerids.length ==0)return true;
+    return  false;
   }
 
   private boolean navMessageProtoContainsSvid(GpsNavMessageProto navMessageProto, int svid) {
@@ -238,82 +269,79 @@ public class PseudorangePositionFromRealTimeEvents {
   }
 
   /**
-   * Calculates ECEF least square position solutions from an array of {@link GpsMeasurement}
-   * in meters and store the result in {@code positionVelocitySolutionEcef}
+   * Calculates least square pseudolite positioning solutions from an array of {@link GpsMeasurement}
+   * in meters and store the result in {@code positionSolution}
    */
-  private void performPositionComputationEcef(
-      UserPositionWeightedLeastSquare userPositionLeastSquare,
+  private void performPseudolitePositioningComputation(
+      PseudoliteMessageStore pseudoliteMessageStore,
+      PseudolitePositioningLeastSquare pseudolitePositioningLeastSquare,
       GpsMeasurement[] usefulSatellitesToReceiverMeasurements,
       Long[] usefulSatellitesToTOWNs,
       double biasNanos,
       double arrivalTimeSinceGPSWeekNs,
       int dayOfYear1To366,
       int gpsWeekNumber,
-      double[] positionSolutionEcef)
+      double[] positionSolution)
       throws Exception {
 
     List<GpsMeasurementWithRangeAndUncertainty> usefulSatellitesToPseudorangeMeasurements =
-        UserPositionWeightedLeastSquare.computePseudorangeAndUncertainties(
+        PseudolitePositioningLeastSquare.computePseudorangeAndUncertainties(
             Arrays.asList(usefulSatellitesToReceiverMeasurements),
             usefulSatellitesToTOWNs,
             biasNanos);
 
     // calculate iterative least square position solution and velocity solutions
-    userPositionLeastSquare.calculateUserPositionLeastSquare(
+    pseudolitePositioningLeastSquare.calculatePseudolitePositioningLeastSquare(
+        pseudoliteMessageStore,
         mGpsNavMessageProtoUsed,
         usefulSatellitesToPseudorangeMeasurements,
         arrivalTimeSinceGPSWeekNs * SECONDS_PER_NANO,
         gpsWeekNumber,
         dayOfYear1To366,
-        positionSolutionEcef);
+        positionSolution);
 
     Log.d(
         TAG,
-        "Least Square Position Solution in ECEF meters: "
-            + positionSolutionEcef[0]
+        "Least Square Pseudolite Positioning Solution in meters: "
+            + positionSolution[0]
             + " "
-            + positionSolutionEcef[1]
+            + positionSolution[1]
             + " "
-            + positionSolutionEcef[2]);
-    Log.d(TAG, "Estimated Receiver clock offset in meters: " + positionSolutionEcef[3]);
+            + positionSolution[2]);
+    Log.d(TAG, "Estimated Receiver clock offset in meters: " + positionSolution[3]);
   }
 
   /**
-   * Checks if we can use the navigation message from the device if we fully received less
-   * than 4 visible satellite ephemerides, return false, otherwise, return true.
+   * Checks if we should continue using the navigation message from the SUPL server, or use the
+   * navigation message from the device if we fully received it. If the navigation message read from
+   * the receiver has all the visible satellite ephemerides, return false, otherwise, return true.
    */
-  private static boolean canUsingNavMessageFromDevice(
-          GpsMeasurement[] usefulSatellitesToReceiverMeasurements,
-          GpsNavMessageProto hardwareGpsNavMessageProto) {
-    int count = 0;
+  private static boolean continueUsingNavMessageFromSupl(
+      GpsMeasurement[] usefulSatellitesToReceiverMeasurements,
+      GpsNavMessageProto hardwareGpsNavMessageProto) {
+    boolean useNavMessageFromSupl = true;
     if (hardwareGpsNavMessageProto != null) {
       ArrayList<GpsEphemerisProto> hardwareEphemeridesList=
-              new ArrayList<GpsEphemerisProto>(Arrays.asList(hardwareGpsNavMessageProto.ephemerids));
-      Log.d("测试解调","有hardwareEphemeridesList了");
-      if(hardwareGpsNavMessageProto.iono == null){
-        Log.d("测试解调","hardwareGpsNavMessageProto.iono为空");
-      }
+          new ArrayList<GpsEphemerisProto>(Arrays.asList(hardwareGpsNavMessageProto.ephemerids));
       if (hardwareGpsNavMessageProto.iono != null) {
         for (int i = 0; i < GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES; i++) {
           if (usefulSatellitesToReceiverMeasurements[i] != null) {
             int prn = i + 1;
-            Log.d("测试解调",prn+"卫星的usefulSatellitesToReceiverMeasurements非空");
             for (GpsEphemerisProto hardwareEphProtoFromList : hardwareEphemeridesList) {
               if (hardwareEphProtoFromList.prn == prn) {
-                Log.d("测试解调",prn+"卫星的星历被找到了");
-                ++count;
+                useNavMessageFromSupl = false;
                 break;
               }
+              useNavMessageFromSupl = true;
             }
-          }
-          else {
-            Log.d("测试解调",(i+1)+"卫星的usefulSatellitesToReceiverMeasurements为空");
+            if (useNavMessageFromSupl == true) {
+              break;
+            }
           }
         }
       }
     }
-    Log.d(TAG, "收到" + count + "个GPS卫星的星历");
-    return count >= MINIMUM_NUMBER_OF_USEFUL_SATELLITES;
+    return useNavMessageFromSupl;
   }
 
   /**
@@ -329,8 +357,6 @@ public class PseudorangePositionFromRealTimeEvents {
 
     // parse only GPS navigation messages for now
     if (messageType == 1) {
-      Log.d(TAG, "测试解调:in parseHwNavigationMessageUpdates: messagePrn="+messagePrn
-      +"    messageType="+messageType+"   subMessageId="+subMessageId);
       mGpsNavigationMessageStore.onNavMessageReported(
           messagePrn, messageType, (short) subMessageId, messageRawData);
       mHardwareGpsNavMessageProto = mGpsNavigationMessageStore.createDecodedNavMessage();
@@ -366,7 +392,7 @@ public class PseudorangePositionFromRealTimeEvents {
   }
 
   /** Returns the last computed weighted least square position solution */
-  public double[] getPositionSolutionLatLngDeg() {
-    return mPositionSolutionLatLngDeg;
+  public double[] getPseudolitePositioningSolutionXYZ() {
+    return mPseudolitePositioningSolutionXYZ;
   }
 }

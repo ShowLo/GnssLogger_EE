@@ -82,10 +82,11 @@ public class MainActivity extends AppCompatActivity
   private UiLoggerNavigation mUiLoggerNavigation;
   private UiLoggerGnssStatus mUiLoggerGnssStatus;
   private UiLoggerNmea mUiLoggerNmea;
-  private UiLoggerPseudolite mUiLoggerPseudolite;
   private RealTimePositionVelocityCalculator mRealTimePositionVelocityCalculator;
   private PositionCalculator mPositionCalculator;
+  private PseudolitePositionCalculator mPseudolitePositionCalculator;
   private FileLogger mFileLogger;
+  private FileLoggerPseudolite mFileLoggerPseudolite;
   private Fragment[] mFragments;
   private GoogleApiClient mGoogleApiClient;
   private boolean mAutoSwitchGroundTruthMode;
@@ -266,13 +267,21 @@ public class MainActivity extends AppCompatActivity
     mUiLoggerNavigation = new UiLoggerNavigation();
     mUiLoggerGnssStatus = new UiLoggerGnssStatus();
     mUiLoggerNmea = new UiLoggerNmea();
-    mUiLoggerPseudolite = new UiLoggerPseudolite();
+
     mRealTimePositionVelocityCalculator = new RealTimePositionVelocityCalculator();
     mRealTimePositionVelocityCalculator.setMainActivity(this);
     mRealTimePositionVelocityCalculator.setResidualPlotMode(
         RealTimePositionVelocityCalculator.RESIDUAL_MODE_DISABLED, null /* fixedGroundTruth */);
+
     mPositionCalculator = new PositionCalculator();
     mPositionCalculator.setMainActivity(this);
+
+    mFileLoggerPseudolite = new FileLoggerPseudolite(getApplicationContext());
+
+    mPseudolitePositionCalculator = new PseudolitePositionCalculator();
+    mPseudolitePositionCalculator.setMainActivity(this);
+    mPseudolitePositionCalculator.setFileLoggerPseudolite(mFileLoggerPseudolite);
+
 
     mFileLogger = new FileLogger(getApplicationContext());
     mGnssContainer =
@@ -284,9 +293,9 @@ public class MainActivity extends AppCompatActivity
             mUiLoggerNavigation,
             mUiLoggerGnssStatus,
             mUiLoggerNmea,
-            mUiLoggerPseudolite,
             mFileLogger,
             mPositionCalculator,
+            mPseudolitePositionCalculator,
             mRealTimePositionVelocityCalculator);
     mFragments = new Fragment[NUMBER_OF_FRAGMENTS];
     SettingsFragment settingsFragment = new SettingsFragment();
@@ -329,8 +338,8 @@ public class MainActivity extends AppCompatActivity
     mFragments[FRAGMENT_INDEX_RESULT] = resultFragment;
 
     PseudoliteFragment pseudoliteFragment = new PseudoliteFragment();
-    pseudoliteFragment.setUiLogger(mUiLoggerPseudolite);
-    pseudoliteFragment.setFileLoggerPseudolite(new FileLoggerPseudolite(getApplicationContext()));
+      pseudoliteFragment.setPseudolitePositionCalculator(mPseudolitePositionCalculator);
+    pseudoliteFragment.setFileLoggerPseudolite(mFileLoggerPseudolite);
     mFragments[FRAGMENT_INDEX_PSEUDOLITE] = pseudoliteFragment;
 
 

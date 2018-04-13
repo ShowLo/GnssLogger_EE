@@ -113,7 +113,7 @@ public class LoggerFragment extends Fragment {
         });
 
     mStartLog = (Button) newView.findViewById(R.id.start_logs);
-    mStopLog = (Button) newView.findViewById(R.id.stop_log);
+    mStopLog = (Button) newView.findViewById(R.id.stop_logs);
 
     enableOptions(true /* start */);
 

@@ -137,6 +137,7 @@ public class FileLoggerPseudolite {
       if (mFileWriter != null) {
         try {
           mFileWriter.write(message);
+          mFileWriter.newLine();
         } catch (IOException e) {
           logException(ERROR_WRITING_FILE, e);
         }

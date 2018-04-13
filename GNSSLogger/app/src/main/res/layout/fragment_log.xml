@@ -55,7 +55,7 @@
             android:layout_height="wrap_content"/>
 
         <Button
-            android:id="@+id/stop_log"
+            android:id="@+id/stop_logs"
             android:text="Stop Log"
             android:layout_width="0dp"
             android:layout_height="wrap_content"

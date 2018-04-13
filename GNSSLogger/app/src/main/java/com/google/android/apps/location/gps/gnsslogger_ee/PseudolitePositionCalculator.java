@@ -31,22 +31,22 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
 
-import com.google.android.apps.location.gps.gnsslogger_ee.ResultFragment.UIResultComponent;
-import com.google.location.lbs.gnss.gps.pseudorange.PseudorangePositionFromRealTimeEvents;
+import com.google.android.apps.location.gps.gnsslogger_ee.PseudoliteFragment.UiPseudoliteFragmentComponent;
+import com.google.location.lbs.gnss.gps.pseudorange.PseudolitePositioningFromRealTimeEvents;
 
 import java.text.DecimalFormat;
 
 /**
- * A class that handles real time position calculation, passing {@link GnssMeasurementsEvent}
- * instances to the {@link PseudorangePositionFromRealTimeEvents} whenever a new raw
+ * A class that handles real time psdudolite positioning, passing {@link GnssMeasurementsEvent}
+ * instances to the {@link PseudolitePositioningFromRealTimeEvents} whenever a new raw
  * measurement is received in order to compute a new position solution. The computed
- * position solutions are passed to the {@link ResultFragment} to be visualized.
+ * position solutions are passed to the {@link PseudoliteFragment} to be visualized.
  */
-public class PositionCalculator implements GnssListener {
+public class PseudolitePositionCalculator implements GnssListener {
 
   private static final long EARTH_RADIUS_METERS = 6371000;
-  private PseudorangePositionFromRealTimeEvents
-      mPseudorangePositionFromRealTimeEvents;
+  private PseudolitePositioningFromRealTimeEvents
+      mPseudolitePositioningFromRealTimeEvents;
   private HandlerThread mPositionCalculationHandlerThread;
   private Handler mMyPositionCalculationHandler;
   private int mCurrentColor = Color.rgb(0x4a, 0x5f, 0x70);
@@ -61,9 +61,15 @@ public class PositionCalculator implements GnssListener {
     Color.rgb(0x66, 0x77, 0x7d)
   };
 
-  public PositionCalculator() {
+  private FileLoggerPseudolite mFileLoggerPseudolite;
+
+  public synchronized void setFileLoggerPseudolite(FileLoggerPseudolite value) {
+    mFileLoggerPseudolite = value;
+  }
+
+  public PseudolitePositionCalculator() {
     mPositionCalculationHandlerThread =
-        new HandlerThread("Position From Realtime Pseudoranges");
+        new HandlerThread("Pseudolite Positioning");
     mPositionCalculationHandlerThread.start();
     mMyPositionCalculationHandler =
         new Handler(mPositionCalculationHandlerThread.getLooper());
@@ -73,12 +79,12 @@ public class PositionCalculator implements GnssListener {
           @Override
           public void run() {
             try {
-              mPseudorangePositionFromRealTimeEvents =
-                  new PseudorangePositionFromRealTimeEvents();
+              mPseudolitePositioningFromRealTimeEvents =
+                  new PseudolitePositioningFromRealTimeEvents();
             } catch (Exception e) {
               Log.e(
                   GnssContainer.TAG,
-                  " Exception in constructing PseudorangePositionFromRealTimeEvents : ",
+                  " Exception in constructing PseudolitePositioningFromRealTimeEvents : ",
                   e);
             }
           }
@@ -87,14 +93,14 @@ public class PositionCalculator implements GnssListener {
     mMyPositionCalculationHandler.post(r);
   }
 
-  private UIResultComponent uiResultComponent;
+  private UiPseudoliteFragmentComponent uiPseudoliteComponent;
 
-  public synchronized UIResultComponent getUiResultComponent() {
-    return uiResultComponent;
+  public synchronized UiPseudoliteFragmentComponent getUiPseudoliteComponent() {
+    return uiPseudoliteComponent;
   }
 
-  public synchronized void setUiResultComponent(UIResultComponent value) {
-    uiResultComponent = value;
+  public synchronized void setUiPseudoliteComponent(UiPseudoliteFragmentComponent value) {
+    uiPseudoliteComponent = value;
   }
 
   @Override
@@ -107,9 +113,9 @@ public class PositionCalculator implements GnssListener {
   public void onGnssStatusChanged(GnssStatus gnssStatus) {}
 
   /**
-   * Update the reference location in {@link PseudorangePositionFromRealTimeEvents} if the
-   * received location is a network location. Otherwise, update the {@link ResultFragment} to
-   * visualize both GPS location computed by the device and the one computed from the raw data.
+   * Update the reference location in {@link PseudolitePositioningFromRealTimeEvents} if the
+   * received location is a network location. Otherwise, update the {@link PseudoliteFragment} to
+   * visualize the result of pseudolite positioning computed from the raw data.
    */
   @Override
   public void onLocationChanged(final Location location) {
@@ -118,11 +124,11 @@ public class PositionCalculator implements GnssListener {
           new Runnable() {
             @Override
             public void run() {
-              if (mPseudorangePositionFromRealTimeEvents == null) {
+              if (mPseudolitePositioningFromRealTimeEvents == null) {
                 return;
               }
               try {
-                mPseudorangePositionFromRealTimeEvents.setReferencePosition(
+                mPseudolitePositioningFromRealTimeEvents.setReferencePosition(
                     (int) (location.getLatitude() * 1E7),
                     (int) (location.getLongitude() * 1E7),
                     (int) (location.getAltitude() * 1E7));
@@ -138,36 +144,28 @@ public class PositionCalculator implements GnssListener {
             new Runnable() {
               @Override
               public void run() {
-                if (mPseudorangePositionFromRealTimeEvents == null) {
+                if (mPseudolitePositioningFromRealTimeEvents == null) {
                   return;
                 }
                 double[] posSolution =
-                    mPseudorangePositionFromRealTimeEvents.getPositionSolutionLatLngDeg();
+                    mPseudolitePositioningFromRealTimeEvents.getPseudolitePositioningSolutionXYZ();
                 if (Double.isNaN(posSolution[0])) {
-                  logPositionFromRawDataEvent("No Position Calculated Yet");
-                  logPositionError("And no offset calculated yet...");
+                  logPseudolitePositioningFromRawDataEvent("No result Calculated Yet");
                 } else {
-                  String formattedLatDegree = new DecimalFormat("##.######").format(posSolution[0]);
-                  String formattedLngDegree = new DecimalFormat("##.######").format(posSolution[1]);
-                  String formattedAltMeters = new DecimalFormat("##.#").format(posSolution[2]);
-                  logPositionFromRawDataEvent(
-                      "latDegrees = "
-                          + formattedLatDegree
-                          + " lngDegrees = "
-                          + formattedLngDegree
-                          + "altMeters = "
-                          + formattedAltMeters);
-                  String formattedOffsetMeters =
-                      new DecimalFormat("##.######")
-                          .format(
-                              getDistanceMeters(
-                                  location.getLatitude(),
-                                  location.getLongitude(),
-                                  posSolution[0],
-                                  posSolution[1]));
-                  logPositionError("position offset = " + formattedOffsetMeters + " meters");
+                  String formattedXMeters = new DecimalFormat("##.###").format(posSolution[0]);
+                  String formattedYMeters = new DecimalFormat("##.###").format(posSolution[1]);
+                  String formattedZMeters = new DecimalFormat("##.###").format(posSolution[2]);
+                  String message = "xMeters = "
+                      + formattedXMeters
+                      + " yMeters = "
+                      + formattedYMeters
+                      + " zMeters = "
+                      + formattedZMeters;
+                  logPseudolitePositioningFromRawDataEvent(message);
+                  if (mFileLoggerPseudolite.getEnableWrite()) {
+                    mFileLoggerPseudolite.writeNewMessage(message);
+                  }
                 }
-                logLocationEvent("onLocationChanged: " + location);
               }
             };
         mMyPositionCalculationHandler.post(r);
@@ -191,12 +189,12 @@ public class PositionCalculator implements GnssListener {
                   public void run() {
                   }
                 });
-            if (mPseudorangePositionFromRealTimeEvents == null) {
+            if (mPseudolitePositioningFromRealTimeEvents == null) {
               return;
             }
             try {
-              mPseudorangePositionFromRealTimeEvents
-                  .computePositionSolutionsFromRawMeas(event);
+              mPseudolitePositioningFromRealTimeEvents
+                  .computePseudolitePositioningSolutionsFromRawMeas(event);
             } catch (Exception e) {
               e.printStackTrace();
             }
@@ -211,7 +209,7 @@ public class PositionCalculator implements GnssListener {
   @Override
   public void onGnssNavigationMessageReceived(GnssNavigationMessage event) {
     if (event.getType() == GnssNavigationMessage.TYPE_GPS_L1CA) {
-      mPseudorangePositionFromRealTimeEvents.parseHwNavigationMessageUpdates(event);
+      mPseudolitePositioningFromRealTimeEvents.parseHwNavigationMessageUpdates(event);
     }
   }
 
@@ -231,52 +229,14 @@ public class PositionCalculator implements GnssListener {
   }
 
   private void logText(String tag, String text, int color) {
-    UIResultComponent component = getUiResultComponent();
+    UiPseudoliteFragmentComponent component = getUiPseudoliteComponent();
     if (component != null) {
-      component.logTextResults(tag, text, color);
+      component.logTextFragment(tag, text, color);
     }
   }
 
-  public void logLocationEvent(String event) {
-    mCurrentColor = getNextColor();
-    logEvent("Location", event, mCurrentColor);
-  }
-
-  private void logPositionFromRawDataEvent(String event) {
-    logEvent("Calculated Position From Raw Data", event + "\n", mCurrentColor);
-  }
-
-  private void logPositionError(String event) {
-    logEvent(
-        "Offset between the reported position and Google's WLS position based on reported "
-            + "measurements",
-        event + "\n",
-        mCurrentColor);
-  }
-
-  private synchronized int getNextColor() {
-    ++mCurrentColorIndex;
-    return mRgbColorArray[mCurrentColorIndex % mRgbColorArray.length];
-  }
-
-  /**
-   * Return the distance (measured along the surface of the sphere) between 2 points
-   */
-  public double getDistanceMeters(
-      double lat1Degree, double lng1Degree, double lat2Degree, double lng2Degree) {
-
-    double deltaLatRadian = Math.toRadians(lat2Degree - lat1Degree);
-    double deltaLngRadian = Math.toRadians(lng2Degree - lng1Degree);
-
-    double a =
-        Math.sin(deltaLatRadian / 2) * Math.sin(deltaLatRadian / 2)
-            + Math.cos(Math.toRadians(lat1Degree))
-                * Math.cos(Math.toRadians(lat2Degree))
-                * Math.sin(deltaLngRadian / 2)
-                * Math.sin(deltaLngRadian / 2);
-    double angularDistanceRad = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-    return EARTH_RADIUS_METERS * angularDistanceRad;
+  private void logPseudolitePositioningFromRawDataEvent(String event) {
+    logEvent("Calculated the result of pseudolite positioning From Raw Data", event + "\n", mCurrentColor);
   }
 
   /**
@@ -285,7 +245,6 @@ public class PositionCalculator implements GnssListener {
   public void setMainActivity(MainActivity mainActivity) {
     this.mMainActivity = mainActivity;
   }
-
 
   @Override
   public void onTTFFReceived(long l) {}
