@@ -22,6 +22,7 @@ package com.google.location.lbs.gnss.gps.pseudorange;
 
 import android.location.cts.nano.Ephemeris.GpsEphemerisProto;
 import android.location.cts.nano.Ephemeris.GpsNavMessageProto;
+import android.util.Log;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -455,16 +456,16 @@ class UserPositionWeightedLeastSquare {
 
     // 移到这里来
     // Correct the receiver time of week with the estimated receiver clock bias
-    /*receiverGPSTowAtReceptionSeconds =
-        receiverGPSTowAtReceptionSeconds - userPositionECEFMeters[3] / SPEED_OF_LIGHT_MPS;*/
+    receiverGPSTowAtReceptionSeconds =
+        receiverGPSTowAtReceptionSeconds - userPositionECEFMeters[3] / SPEED_OF_LIGHT_MPS;
 
     for (int i = 0; i < GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES; i++) {
       if (usefulSatellitesToReceiverMeasurements.get(i) != null) {
         GpsEphemerisProto ephemeridesProto = getEphemerisForSatellite(navMeassageProto, i + 1);
         // 这里移出去看一看效果，应该修正一次就够了
         // Correct the receiver time of week with the estimated receiver clock bias
-        receiverGPSTowAtReceptionSeconds =
-            receiverGPSTowAtReceptionSeconds - userPositionECEFMeters[3] / SPEED_OF_LIGHT_MPS;
+        /*receiverGPSTowAtReceptionSeconds =
+            receiverGPSTowAtReceptionSeconds - userPositionECEFMeters[3] / SPEED_OF_LIGHT_MPS;*/
 
         double pseudorangeMeasurementMeters =
             usefulSatellitesToReceiverMeasurements.get(i).pseudorangeMeters;
@@ -684,7 +685,8 @@ class UserPositionWeightedLeastSquare {
 
     // Correct with the satellite clock correction term
     double receiverGpsTowAtTimeOfTransmissionCorrectedSec =
-        receiverGpsTowAtTimeOfTransmission + clockCorrectionSeconds;
+        receiverGpsTowAtTimeOfTransmission - clockCorrectionSeconds;
+    //上面这里应该是减去才对。。。
 
     // Adjust for week rollover due to satellite clock correction
     if (receiverGpsTowAtTimeOfTransmissionCorrectedSec < 0.0) {

@@ -161,6 +161,7 @@ public class PseudorangePositionFromRealTimeEvents {
       if (mReferenceLocation == null) {
         Log.d(TAG, "The reference location is null, so we cannot get navigaion"
                       + "message from SUPL server.");
+        mPositionSolutionLatLngDeg = GpsMathOperations.createAndFillArray(3, Double.NaN);
         return;
       } else {
         mGpsNavMessageProtoUsed = getSuplNavMessage(mReferenceLocation[0], mReferenceLocation[1]);
@@ -194,7 +195,7 @@ public class PseudorangePositionFromRealTimeEvents {
     if (!mFirstUsefulMeasurementSet) {
       // start with last known position of zero. Following the structure:
       // [X position, Y position, Z position, clock bias]
-      double[] positionVelocitySolutionEcef = GpsMathOperations.createAndFillArray(4, 0);
+      double[] positionSolutionEcef = GpsMathOperations.createAndFillArray(4, 0);
       performPositionComputationEcef(
               mUserPositionLeastSquareCalculator,
               mUsefulSatellitesToReceiverMeasurements,
@@ -203,13 +204,13 @@ public class PseudorangePositionFromRealTimeEvents {
               mArrivalTimeSinceGPSWeekNs,
               mDayOfYear1To366,
               mGpsWeekNumber,
-              positionVelocitySolutionEcef);
+              positionSolutionEcef);
       // convert the position solution from ECEF to latitude, longitude and altitude
       GeodeticLlaValues latLngAlt =
               Ecef2LlaConverter.convertECEFToLLACloseForm(
-                      positionVelocitySolutionEcef[0],
-                      positionVelocitySolutionEcef[1],
-                      positionVelocitySolutionEcef[2]);
+                      positionSolutionEcef[0],
+                      positionSolutionEcef[1],
+                      positionSolutionEcef[2]);
       mPositionSolutionLatLngDeg[0] = Math.toDegrees(latLngAlt.latitudeRadians);
       mPositionSolutionLatLngDeg[1] = Math.toDegrees(latLngAlt.longitudeRadians);
       mPositionSolutionLatLngDeg[2] = latLngAlt.altitudeMeters;
@@ -258,7 +259,7 @@ public class PseudorangePositionFromRealTimeEvents {
             usefulSatellitesToTOWNs,
             biasNanos);
 
-    // calculate iterative least square position solution and velocity solutions
+    // calculate iterative least square position solution
     userPositionLeastSquare.calculateUserPositionLeastSquare(
         mGpsNavMessageProtoUsed,
         usefulSatellitesToPseudorangeMeasurements,
@@ -279,7 +280,7 @@ public class PseudorangePositionFromRealTimeEvents {
   }
 
   /**
-   * Checks if we can use the navigation message from the device if we fully received less
+   * Checks if we can use the navigation message from the device. If we fully received less
    * than 4 visible satellite ephemerides, return false, otherwise, return true.
    */
   private static boolean canUsingNavMessageFromDevice(

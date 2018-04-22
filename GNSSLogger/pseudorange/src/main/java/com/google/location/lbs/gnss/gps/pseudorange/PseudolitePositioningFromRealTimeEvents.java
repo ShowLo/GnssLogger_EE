@@ -180,9 +180,11 @@ public class PseudolitePositioningFromRealTimeEvents {
         mUsefulSatellitesToTowNs[item.getKey()] = null;
       }
     }
+    Log.d(TAG, "一共收到"+count+"颗卫星的measurement");
     // 没有收到所有伪卫星的数据，停止计算
     if (count < pseudoliteNum) {
       Log.d(TAG, "Do not receive all the measurements from pseudolites, stop calculating.");
+      mPseudolitePositioningSolutionXYZ = GpsMathOperations.createAndFillArray(3, Double.NaN);
       return;
     }
 
@@ -193,18 +195,13 @@ public class PseudolitePositioningFromRealTimeEvents {
             mUsefulSatellitesToReceiverMeasurements, mHardwareGpsNavMessageProto);
     if (useNavMessageFromSupl) {
       Log.d(TAG, "Using navigation message from SUPL server");
-
-      if (mFirstSuplRequestNeeded
-          || (System.currentTimeMillis() - mLastReceivedSuplMessageTimeMillis)
-          > mDeltaTimeMillisToMakeSuplRequest) {
-        // The following line is blocking call for SUPL connection and back. But it is fast enough
+      if (mReferenceLocation == null) {
+        Log.d(TAG, "The reference location is null, so we cannot get navigaion"
+            + "message from SUPL server.");
+        mPseudolitePositioningSolutionXYZ = GpsMathOperations.createAndFillArray(3, Double.NaN);
+        return;
+      } else {
         mGpsNavMessageProtoUsed = getSuplNavMessage(mReferenceLocation[0], mReferenceLocation[1]);
-        if (!isEmptyNavMessage(mGpsNavMessageProtoUsed)) {
-          mFirstSuplRequestNeeded = false;
-          mLastReceivedSuplMessageTimeMillis = System.currentTimeMillis();
-        } else {
-          return;
-        }
       }
     } else {
       Log.d(TAG, "Using navigation message from the GPS receiver");
@@ -215,7 +212,9 @@ public class PseudolitePositioningFromRealTimeEvents {
     for (int i = 0; i < GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES; i++) {
       if (mUsefulSatellitesToReceiverMeasurements[i] != null
           && !navMessageProtoContainsSvid(mGpsNavMessageProtoUsed, i + 1)) {
+        Log.d(TAG, (i+1)+"卫星的星历不存在");
         Log.d(TAG, "There are visible satellites without useful ephemeris, stop calculating");
+        mPseudolitePositioningSolutionXYZ = GpsMathOperations.createAndFillArray(3, Double.NaN);
         return;
       }
     }

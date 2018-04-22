@@ -60,6 +60,8 @@ public class PositionCalculator implements GnssListener {
     Color.rgb(0x82, 0x4e, 0x4e),
     Color.rgb(0x66, 0x77, 0x7d)
   };
+  private double latitude = Double.NaN;
+  private double longitude = Double.NaN;
 
   public PositionCalculator() {
     mPositionCalculationHandlerThread =
@@ -141,33 +143,19 @@ public class PositionCalculator implements GnssListener {
                 if (mPseudorangePositionFromRealTimeEvents == null) {
                   return;
                 }
-                double[] posSolution =
-                    mPseudorangePositionFromRealTimeEvents.getPositionSolutionLatLngDeg();
-                if (Double.isNaN(posSolution[0])) {
-                  logPositionFromRawDataEvent("No Position Calculated Yet");
-                  logPositionError("And no offset calculated yet...");
-                } else {
-                  String formattedLatDegree = new DecimalFormat("##.######").format(posSolution[0]);
-                  String formattedLngDegree = new DecimalFormat("##.######").format(posSolution[1]);
-                  String formattedAltMeters = new DecimalFormat("##.#").format(posSolution[2]);
-                  logPositionFromRawDataEvent(
-                      "latDegrees = "
-                          + formattedLatDegree
-                          + " lngDegrees = "
-                          + formattedLngDegree
-                          + "altMeters = "
-                          + formattedAltMeters);
-                  String formattedOffsetMeters =
-                      new DecimalFormat("##.######")
-                          .format(
-                              getDistanceMeters(
-                                  location.getLatitude(),
-                                  location.getLongitude(),
-                                  posSolution[0],
-                                  posSolution[1]));
-                  logPositionError("position offset = " + formattedOffsetMeters + " meters");
+
+                try {
+                  //先将设备返回的位置设为参考位置，用于请求服务器的星历数据
+                  mPseudorangePositionFromRealTimeEvents.setReferencePosition(
+                      (int) (location.getLatitude() * 1E7),
+                      (int) (location.getLongitude() * 1E7),
+                      (int) (location.getAltitude() * 1E7));
+                } catch (Exception e) {
+                  Log.e(GnssContainer.TAG, " Exception setting reference location : ", e);
                 }
-                logLocationEvent("onLocationChanged: " + location);
+                latitude = location.getLatitude();
+                longitude = location.getLongitude();
+                //logLocationEvent("onLocationChanged: " + location);
               }
             };
         mMyPositionCalculationHandler.post(r);
@@ -197,6 +185,37 @@ public class PositionCalculator implements GnssListener {
             try {
               mPseudorangePositionFromRealTimeEvents
                   .computePositionSolutionsFromRawMeas(event);
+              double[] posSolution =
+                  mPseudorangePositionFromRealTimeEvents.getPositionSolutionLatLngDeg();
+              if (Double.isNaN(posSolution[0])) {
+                logPositionFromRawDataEvent("No Position Calculated Yet");
+                logPositionError("And no offset calculated yet...");
+              } else {
+                String formattedLatDegree = new DecimalFormat("##.######").format(posSolution[0]);
+                String formattedLngDegree = new DecimalFormat("##.######").format(posSolution[1]);
+                String formattedAltMeters = new DecimalFormat("##.#").format(posSolution[2]);
+                logPositionFromRawDataEvent(
+                    "latDegrees = "
+                        + formattedLatDegree
+                        + " lngDegrees = "
+                        + formattedLngDegree
+                        + " altMeters = "
+                        + formattedAltMeters);
+                String formattedOffsetMeters;
+                if (Double.isNaN(latitude) || Double.isNaN(longitude)) {
+                  formattedOffsetMeters = "NaN";
+                } else {
+                  formattedOffsetMeters =
+                      new DecimalFormat("##.######")
+                          .format(
+                              getDistanceMeters(
+                                  latitude,
+                                  longitude,
+                                  posSolution[0],
+                                  posSolution[1]));
+                }
+                logPositionError("position offset = " + formattedOffsetMeters + " meters");
+              }
             } catch (Exception e) {
               e.printStackTrace();
             }
@@ -243,14 +262,13 @@ public class PositionCalculator implements GnssListener {
   }
 
   private void logPositionFromRawDataEvent(String event) {
-    logEvent("Calculated Position From Raw Data", event + "\n", mCurrentColor);
+    logEvent("Calculated WLS Position From Raw Data", event + "\n", mCurrentColor);
   }
 
   private void logPositionError(String event) {
     logEvent(
-        "Offset between the reported position and Google's WLS position based on reported "
-            + "measurements",
-        event + "\n",
+        "Offset between the position calculated using WLS based on reported measurements and "
+            + "the position reported by the device", event + "\n",
         mCurrentColor);
   }
 

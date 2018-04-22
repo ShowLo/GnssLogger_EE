@@ -95,7 +95,7 @@ public class UiLoggerNmea implements GnssListener {
 
   private void logEvent(String tag, String message, int color) {
     String composedTag = GnssContainer.TAG + tag;
-    Log.d(composedTag, message);
+    //Log.d(composedTag, message);
     logText(tag, message, color);
   }
 
