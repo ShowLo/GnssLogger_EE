@@ -35,6 +35,7 @@ import com.google.android.apps.location.gps.gnsslogger_ee.PseudoliteFragment.UiP
 import com.google.location.lbs.gnss.gps.pseudorange.PseudolitePositioningFromRealTimeEvents;
 
 import java.text.DecimalFormat;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A class that handles real time psdudolite positioning, passing {@link GnssMeasurementsEvent}
@@ -53,6 +54,7 @@ public class PseudolitePositionCalculator implements GnssListener {
   private int mCurrentColorIndex = 0;
   private boolean mAllowShowingRawResults = false;
   private MainActivity mMainActivity;
+  private PlotPseudoliteFragment mPlotPseudoliteFragment;
   private int[] mRgbColorArray = {
     Color.rgb(0x4a, 0x5f, 0x70),
     Color.rgb(0x7f, 0x82, 0x5f),
@@ -60,6 +62,10 @@ public class PseudolitePositionCalculator implements GnssListener {
     Color.rgb(0x82, 0x4e, 0x4e),
     Color.rgb(0x66, 0x77, 0x7d)
   };
+
+  public void setPlotPseudoliteFragment(PlotPseudoliteFragment plotPseudoliteFragment) {
+    this.mPlotPseudoliteFragment = plotPseudoliteFragment;
+  }
 
   private FileLoggerPseudolite mFileLoggerPseudolite;
 
@@ -161,6 +167,28 @@ public class PseudolitePositionCalculator implements GnssListener {
             try {
               mPseudolitePositioningFromRealTimeEvents
                   .computePseudolitePositioningSolutionsFromRawMeas(event);
+
+              mMainActivity.runOnUiThread(
+                  new Runnable() {
+                    @Override
+                    public void run() {
+                      long timeSeconds = TimeUnit.NANOSECONDS.toSeconds(event.getClock().getTimeNanos());
+                      mPlotPseudoliteFragment.updateRawPseudorangesTab(
+                          mPseudolitePositioningFromRealTimeEvents.getRawPseudorangesMeters(), timeSeconds);
+                      mPlotPseudoliteFragment.updateAntennaToSatPseudorangesTab(
+                          mPseudolitePositioningFromRealTimeEvents.getAntennaToSatPseudorangesMeters(), timeSeconds);
+                      mPlotPseudoliteFragment.updateAntennaToUserPseudorangesTab(
+                          mPseudolitePositioningFromRealTimeEvents.getAntennaToUserPseudorangesMeters(), timeSeconds);
+                      mPlotPseudoliteFragment.updateChangeOfRawPseudorangesTab(
+                          mPseudolitePositioningFromRealTimeEvents.getChangeOfRawPseudorangesMeters(), timeSeconds);
+                      mPlotPseudoliteFragment.updateChangeOfAntennaToSatPseudorangesTab(
+                          mPseudolitePositioningFromRealTimeEvents.getChangeOfAntennaToSatPseudorangesMeters(), timeSeconds);
+                      mPlotPseudoliteFragment.updateChangeOfAntennaToUserPseudorangesTab(
+                          mPseudolitePositioningFromRealTimeEvents.getChangeOfAntennaToUserPseudorangesMeters(), timeSeconds);
+                    }
+                  }
+              );
+
               double[] posSolution =
                   mPseudolitePositioningFromRealTimeEvents.getPseudolitePositioningSolutionXYZ();
               if (Double.isNaN(posSolution[0])) {

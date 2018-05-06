@@ -75,6 +75,17 @@ class PseudolitePositioningLeastSquare {
   private boolean calculateGeoidMeters = true;
   private RealMatrix geometryMatrix;
 
+  // 室外接收天线到卫星伪距
+  private double[] mAntennaToSatPseudorangesMeters =
+      GpsMathOperations.createAndFillArray(
+          GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES, Double.NaN
+      );
+  // 室内转发天线到用户伪距
+  private double[] mAntennaToUserPseudorangesMeters =
+      GpsMathOperations.createAndFillArray(
+          GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES, Double.NaN
+      );
+
   /** Constructor */
   public PseudolitePositioningLeastSquare(PseudorangeSmoother pseudorangeSmoother) {
     this.pseudorangeSmoother = pseudorangeSmoother;
@@ -115,7 +126,7 @@ class PseudolitePositioningLeastSquare {
     double[] outdoorAntennaECEF = Lla2EcefConverter.convertFromLlaToEcefMeters(
         new GeodeticLlaValues(Math.toRadians(outdoorAntennaLla[0]),
             Math.toRadians(outdoorAntennaLla[1]), outdoorAntennaLla[2]));
-    /*// 先用解出来的位置上方作为室外天线位置
+    /*// 先用解出来的位置上方作为室外天线位置来测试
     double[] outdoorAntennaECEF = Lla2EcefConverter.convertFromLlaToEcefMeters(
         new GeodeticLlaValues(Math.toRadians(positionSolutionECEF[0]),
             Math.toRadians(positionSolutionECEF[1]), positionSolutionECEF[2] + 10));*/
@@ -180,8 +191,14 @@ class PseudolitePositioningLeastSquare {
           satellitesPositionECEFMeters, outdoorAntennaECEF, satsCounter, ephemeridesProto,
           correctedTowAndWeek, ionosphericCorrectionMeters, troposphericCorrectionMeters);
 
+      //for visualization
+      mAntennaToSatPseudorangesMeters[satellitePRNs[satsCounter] - 1] = satelliteToOutdoorAntennaPseudorange;
+
       // 卫星到用户伪距减去卫星到室外接收天线的伪距
       pseudoliteToUserRange[satsCounter] = pseudorangeMeasurementMeters - satelliteToOutdoorAntennaPseudorange;
+
+      // for visualization
+      mAntennaToUserPseudorangesMeters[satellitePRNs[satsCounter] - 1] = pseudoliteToUserRange[satsCounter];
 
       if (pseudoliteToUserRange[satsCounter] < minValue) {
         minValue = pseudoliteToUserRange[satsCounter];
@@ -206,26 +223,29 @@ class PseudolitePositioningLeastSquare {
       double[] r = {indoorAntennasXyz[i][0] - positionSolution[0],
           indoorAntennasXyz[i][1] - positionSolution[1],
           indoorAntennasXyz[i][2] - positionSolution[2]};
+      // 根据初始化的用户位置计算得到预计的伪卫星到用户的伪距
       estiPseuoRange[i] = Math.sqrt(Math.pow(r[0], 2) + Math.pow(r[1], 2) + Math.pow(r[2], 2)) + bias;
-      if (estiPseuoRange[i] < minPseuorange)
+      if (estiPseuoRange[i] < minPseuorange) {
         minPseuorange = estiPseuoRange[i];
+      }
       //deltaPseuoRange[i] = pseudoliteToUserRange[i] - estiPseuoRange[i];
       //Log.d("伪卫星最小二乘", "estiPseudoRange["+i+"]:"+estiPseuoRange[i]+
       //    " deltaPseuoRange["+i+"]:"+deltaPseuoRange[i]);
     }
 
-    Random random = new Random();
-    double[] simulationPos = {1.0, 1.0, 0.0};
+    //Random random = new Random();
+    //double[] simulationPos = {1.0, 1.0, 0.0};
     for (int satsCounter = 0; satsCounter < pseudoliteNum; ++satsCounter) {
-      //pseudoliteToUserRange[satsCounter] -= (minValue - minPseuorange);
+      pseudoliteToUserRange[satsCounter] -= (minValue - minPseuorange);
 
       // 仿真用，假设用户在（1，1，0），同时叠加高斯噪声
-      double[] r = {indoorAntennasXyz[satsCounter][0] - simulationPos[0],
+      /*double[] r = {indoorAntennasXyz[satsCounter][0] - simulationPos[0],
           indoorAntennasXyz[satsCounter][1] - simulationPos[1],
           indoorAntennasXyz[satsCounter][2] - simulationPos[2]};
       pseudoliteToUserRange[satsCounter] = Math.sqrt(Math.pow(r[0],2)+
-          Math.pow(r[1],2)+Math.pow(r[2],2))+random.nextGaussian();
+          Math.pow(r[1],2)+Math.pow(r[2],2))+random.nextGaussian();*/
 
+      // 伪距残差
       deltaPseuoRange[satsCounter] = pseudoliteToUserRange[satsCounter] - estiPseuoRange[satsCounter];
       Log.d("伪卫星最小二乘", "处理后的伪卫星到用户伪距"+satsCounter+":"+pseudoliteToUserRange[satsCounter]
           +" estiPseudoRange["+satsCounter+"]:"+estiPseuoRange[satsCounter]+
@@ -1207,6 +1227,14 @@ class PseudolitePositioningLeastSquare {
       }
     }
     return usefulSatellitesToPseudorangeMeasurements;
+  }
+
+  public double[] getAntennaToSatPseudorangesMeters() {
+    return this.mAntennaToSatPseudorangesMeters;
+  }
+
+  public double[] getAntennaToUserPseudorangesMeters() {
+    return this.mAntennaToUserPseudorangesMeters;
   }
 
 }

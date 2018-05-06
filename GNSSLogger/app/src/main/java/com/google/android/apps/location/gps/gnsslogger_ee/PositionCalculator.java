@@ -30,11 +30,13 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
+import android.util.TimeUtils;
 
 import com.google.android.apps.location.gps.gnsslogger_ee.ResultFragment.UIResultComponent;
 import com.google.location.lbs.gnss.gps.pseudorange.PseudorangePositionFromRealTimeEvents;
 
 import java.text.DecimalFormat;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A class that handles real time position calculation, passing {@link GnssMeasurementsEvent}
@@ -53,6 +55,8 @@ public class PositionCalculator implements GnssListener {
   private int mCurrentColorIndex = 0;
   private boolean mAllowShowingRawResults = false;
   private MainActivity mMainActivity;
+  private PlotFragment mPlotFragment;
+  private BaiduMapFragment mBaiduMapFragment;
   private int[] mRgbColorArray = {
     Color.rgb(0x4a, 0x5f, 0x70),
     Color.rgb(0x7f, 0x82, 0x5f),
@@ -62,6 +66,14 @@ public class PositionCalculator implements GnssListener {
   };
   private double latitude = Double.NaN;
   private double longitude = Double.NaN;
+
+  public void setPlotFragment(PlotFragment plotFragment) {
+    this.mPlotFragment = plotFragment;
+  }
+
+  public void setBaiduMapFragment(BaiduMapFragment baiduMapFragment) {
+    this.mBaiduMapFragment = baiduMapFragment;
+  }
 
   public PositionCalculator() {
     mPositionCalculationHandlerThread =
@@ -140,6 +152,13 @@ public class PositionCalculator implements GnssListener {
             new Runnable() {
               @Override
               public void run() {
+                mMainActivity.runOnUiThread(
+                    new Runnable() {
+                      @Override
+                      public void run() {
+                        mBaiduMapFragment.updateMarker(location.getLatitude(), location.getLongitude());
+                      }
+                    });
                 if (mPseudorangePositionFromRealTimeEvents == null) {
                   return;
                 }
@@ -177,6 +196,7 @@ public class PositionCalculator implements GnssListener {
                 new Runnable() {
                   @Override
                   public void run() {
+                    mPlotFragment.updateCnoTab(event);
                   }
                 });
             if (mPseudorangePositionFromRealTimeEvents == null) {
@@ -185,6 +205,18 @@ public class PositionCalculator implements GnssListener {
             try {
               mPseudorangePositionFromRealTimeEvents
                   .computePositionSolutionsFromRawMeas(event);
+
+              mMainActivity.runOnUiThread(
+                  new Runnable() {
+                    @Override
+                    public void run() {
+                      mPlotFragment.updatePseudorangesTab(
+                          mPseudorangePositionFromRealTimeEvents.getPseudorangesMeters(),
+                          TimeUnit.NANOSECONDS.toSeconds(event.getClock().getTimeNanos()));
+                    }
+                  }
+              );
+
               double[] posSolution =
                   mPseudorangePositionFromRealTimeEvents.getPositionSolutionLatLngDeg();
               if (Double.isNaN(posSolution[0])) {

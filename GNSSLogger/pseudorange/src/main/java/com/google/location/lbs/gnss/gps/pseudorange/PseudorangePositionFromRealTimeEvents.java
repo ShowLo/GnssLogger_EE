@@ -87,6 +87,11 @@ public class PseudorangePositionFromRealTimeEvents {
   private static final String SUPL_SERVER_NAME = "supl.google.com";
   private static final int SUPL_SERVER_PORT = 7276;
 
+  private double[] mPseudorangesMeters =
+      GpsMathOperations.createAndFillArray(
+          GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES, Double.NaN
+      );
+
   /**
    * Computes Weighted least square position solutions from a received {@link
    * GnssMeasurementsEvent} and store the result in {@link
@@ -94,6 +99,11 @@ public class PseudorangePositionFromRealTimeEvents {
    */
   public void computePositionSolutionsFromRawMeas(GnssMeasurementsEvent event)
       throws Exception {
+    mPseudorangesMeters =
+        GpsMathOperations.createAndFillArray(
+            GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES, Double.NaN
+        );
+
     for (int i = 0; i < GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES; i++) {
       mUsefulSatellitesToReceiverMeasurements[i] = null;
       mUsefulSatellitesToTowNs[i] = null;
@@ -259,6 +269,14 @@ public class PseudorangePositionFromRealTimeEvents {
             usefulSatellitesToTOWNs,
             biasNanos);
 
+    for (int i = 0; i < GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES; ++i) {
+      if (usefulSatellitesToPseudorangeMeasurements.get(i) != null) {
+        mPseudorangesMeters[i] = usefulSatellitesToPseudorangeMeasurements.get(i).pseudorangeMeters;
+      } else {
+        mPseudorangesMeters[i] = Double.NaN;
+      }
+    }
+
     // calculate iterative least square position solution
     userPositionLeastSquare.calculateUserPositionLeastSquare(
         mGpsNavMessageProtoUsed,
@@ -369,5 +387,12 @@ public class PseudorangePositionFromRealTimeEvents {
   /** Returns the last computed weighted least square position solution */
   public double[] getPositionSolutionLatLngDeg() {
     return mPositionSolutionLatLngDeg;
+  }
+
+  /**
+   * Returns the pseudoranges
+   */
+  public double[] getPseudorangesMeters() {
+    return mPseudorangesMeters;
   }
 }

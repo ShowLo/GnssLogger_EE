@@ -95,6 +95,43 @@ public class PseudolitePositioningFromRealTimeEvents {
   private static final String SUPL_SERVER_NAME = "supl.google.com";
   private static final int SUPL_SERVER_PORT = 7276;
 
+  private double[] mRawPseudorangesMeters =
+      GpsMathOperations.createAndFillArray(
+          GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES, Double.NaN
+      );
+  private double[] mAntennaToSatPseudorangesMeters =
+      GpsMathOperations.createAndFillArray(
+          GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES, Double.NaN
+      );
+  private double[] mAntennaToUserPseudorangesMeters =
+      GpsMathOperations.createAndFillArray(
+          GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES, Double.NaN
+      );
+  private double[] mInitialRawPseudorangesMeters =
+      GpsMathOperations.createAndFillArray(
+          GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES, Double.NaN
+      );
+  private double[] mInitialAntennaToSatPseudorangesMeters =
+      GpsMathOperations.createAndFillArray(
+          GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES, Double.NaN
+      );
+  private double[] mInitialAntennaToUserPseudorangesMeters =
+      GpsMathOperations.createAndFillArray(
+          GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES, Double.NaN
+      );
+  private double[] mChangeOfRawPseudorangesMeters =
+      GpsMathOperations.createAndFillArray(
+          GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES, Double.NaN
+      );
+  private double[] mChangeOfAntennaToSatPseudorangesMeters =
+      GpsMathOperations.createAndFillArray(
+          GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES, Double.NaN
+      );
+  private double[] mChangeOfAntennaToUserPseudorangesMeters =
+      GpsMathOperations.createAndFillArray(
+          GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES, Double.NaN
+      );
+
   /**
    * Computes Weighted least square position solutions from a received {@link
    * GnssMeasurementsEvent} and store the result in {@link
@@ -102,6 +139,30 @@ public class PseudolitePositioningFromRealTimeEvents {
    */
   public void computePseudolitePositioningSolutionsFromRawMeas(GnssMeasurementsEvent event)
       throws Exception {
+    mRawPseudorangesMeters =
+        GpsMathOperations.createAndFillArray(
+            GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES, Double.NaN
+        );
+    mAntennaToSatPseudorangesMeters =
+        GpsMathOperations.createAndFillArray(
+            GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES, Double.NaN
+        );
+    mAntennaToUserPseudorangesMeters =
+        GpsMathOperations.createAndFillArray(
+            GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES, Double.NaN
+        );
+    mChangeOfRawPseudorangesMeters =
+        GpsMathOperations.createAndFillArray(
+            GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES, Double.NaN
+        );
+    mChangeOfAntennaToSatPseudorangesMeters =
+        GpsMathOperations.createAndFillArray(
+            GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES, Double.NaN
+        );
+    mChangeOfAntennaToUserPseudorangesMeters =
+        GpsMathOperations.createAndFillArray(
+            GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES, Double.NaN
+        );
 
     for (int i = 0; i < GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES; i++) {
       mUsefulSatellitesToReceiverMeasurements[i] = null;
@@ -289,6 +350,17 @@ public class PseudolitePositioningFromRealTimeEvents {
             usefulSatellitesToTOWNs,
             biasNanos);
 
+    for (int i = 0; i < GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES; ++i) {
+      if (usefulSatellitesToPseudorangeMeasurements.get(i) != null) {
+        mRawPseudorangesMeters[i] = usefulSatellitesToPseudorangeMeasurements.get(i).pseudorangeMeters;
+        if (Double.isNaN(mInitialRawPseudorangesMeters[i])) {
+          mInitialRawPseudorangesMeters[i] = mRawPseudorangesMeters[i];
+        }
+      } else {
+        mRawPseudorangesMeters[i] = Double.NaN;
+      }
+    }
+
     // calculate iterative least square position solution and velocity solutions
     pseudolitePositioningLeastSquare.calculatePseudolitePositioningLeastSquare(
         pseudoliteMessageStore,
@@ -298,6 +370,38 @@ public class PseudolitePositioningFromRealTimeEvents {
         gpsWeekNumber,
         dayOfYear1To366,
         positionSolution);
+
+    // 卫星到室外天线伪距观测量
+    mAntennaToSatPseudorangesMeters = pseudolitePositioningLeastSquare.getAntennaToSatPseudorangesMeters();
+    // 卫星到室外天线伪距初始观测量
+    for (int i = 0; i < GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES; ++i) {
+      if (Double.isNaN(mInitialAntennaToSatPseudorangesMeters[i])) {
+        mInitialAntennaToSatPseudorangesMeters[i] = mAntennaToSatPseudorangesMeters[i];
+      }
+    }
+    // 卫星到室外天线伪距变化量
+    for (int i = 0; i < GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES; ++i) {
+      if (!Double.isNaN(mAntennaToSatPseudorangesMeters[i])) {
+        mChangeOfAntennaToSatPseudorangesMeters[i] = mAntennaToSatPseudorangesMeters[i]
+            - mInitialAntennaToSatPseudorangesMeters[i];
+      }
+    }
+
+    // 室内天线到用户伪距观测量
+    mAntennaToUserPseudorangesMeters = pseudolitePositioningLeastSquare.getAntennaToUserPseudorangesMeters();
+    // 室内天线到用户伪距初始观测量
+    for(int i = 0; i < GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES; ++i) {
+      if (Double.isNaN(mInitialAntennaToUserPseudorangesMeters[i])) {
+        mInitialAntennaToUserPseudorangesMeters[i] = mAntennaToUserPseudorangesMeters[i];
+      }
+    }
+    // 室内天线到用户伪距变化量
+    for(int i = 0; i < GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES; ++i) {
+      if (!Double.isNaN(mAntennaToUserPseudorangesMeters[i])) {
+        mChangeOfAntennaToUserPseudorangesMeters[i] = mAntennaToUserPseudorangesMeters[i]
+            - mInitialAntennaToUserPseudorangesMeters[i];
+      }
+    }
 
     Log.d(
         TAG,
@@ -393,5 +497,47 @@ public class PseudolitePositioningFromRealTimeEvents {
   /** Returns the last computed weighted least square position solution */
   public double[] getPseudolitePositioningSolutionXYZ() {
     return mPseudolitePositioningSolutionXYZ;
+  }
+
+  /**
+   * Returns the raw pseudoranges
+   */
+  public double[] getRawPseudorangesMeters() {
+    return mRawPseudorangesMeters;
+  }
+
+  /**
+   * Returns the pseudoranges from the outdoor antenna to satellite
+   */
+  public double[] getAntennaToSatPseudorangesMeters() {
+    return mAntennaToSatPseudorangesMeters;
+  }
+
+  /**
+   * Returns the pseudoranges from the indoor antenna to user
+   */
+  public double[] getAntennaToUserPseudorangesMeters() {
+    return mAntennaToUserPseudorangesMeters;
+  }
+
+  /**
+   * Returns the change of raw pseudoranges
+   */
+  public double[] getChangeOfRawPseudorangesMeters() {
+    return mChangeOfRawPseudorangesMeters;
+  }
+
+  /**
+   * Returns the change of pseudoranges from the outdoor antenna to satellite
+   */
+  public double[] getChangeOfAntennaToSatPseudorangesMeters() {
+    return mChangeOfAntennaToSatPseudorangesMeters;
+  }
+
+  /**
+   * Returns the change of pseudoranges from the indoor antenna to user
+   */
+  public double[] getChangeOfAntennaToUserPseudorangesMeters() {
+    return mChangeOfAntennaToUserPseudorangesMeters;
   }
 }

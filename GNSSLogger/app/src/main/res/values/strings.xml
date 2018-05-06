@@ -13,6 +13,9 @@
     <string name="title_position">Position</string>
     <string name="title_offset">Position Offset</string>
     <string name="title_pseudolite">Pseudolite</string>
+    <string name="title_plot">Plot</string>
+    <string name="title_map">Map</string>
+    <string name="title_plot_pseudolite">Plot Pseudolite</string>
     <string name="title_test">Test</string>
     <string name="title_device">Device</string>
     <string name="title_wls">WLS</string>
@@ -72,7 +75,15 @@
     </string-array>
     <string-array name="tab_arrays">
         <item>C/N0</item>
-        <item>PR Residual</item>
+        <item>Pseudoranges</item>
+    </string-array>
+    <string-array name="tabspinner_arrays">
+        <item>Raw Pseudoranges</item>
+        <item>Outdoor Antenna to Sat Pseudoranges</item>
+        <item>Indoor Antenna to User Pseudoranges</item>
+        <item>Change of Raw Pseudoranges</item>
+        <item>Change of Outdoor Antenna to Sat Pseudoranges</item>
+        <item>Change of Indoor Antenna to User Pseudoranges</item>
     </string-array>
     <string-array name="residual_options">
         <item>Manual - Still</item>
@@ -82,6 +93,14 @@
     </string-array>
     <string-array name="plot_titles">
         <item>CN0(dB.Hz) vs Time(s)</item>
-        <item>Pseudorange residual(m) vs Time(s)</item>
+        <item>Pseudorange(m) vs Time(s)</item>
+    </string-array>
+    <string-array name="plot_pseudolite_titles">
+        <item>Raw Pseudorange(m) vs Time(s)</item>
+        <item>Outdoor Antenna to Sat Pseudorange(m) vs Time(s)</item>
+        <item>Indoor Antenna to User Pseudorange(m) vs Time(s)</item>
+        <item>Change of Raw Pseudorange(m) vs Time(s)</item>
+        <item>Change of Outdoor Antenna to Sat Pseudorange(m) vs Time(s)</item>
+        <item>Change of Indoor Antenna to User Pseudorange(m) vs Time(s)</item>
     </string-array>
 </resources>
