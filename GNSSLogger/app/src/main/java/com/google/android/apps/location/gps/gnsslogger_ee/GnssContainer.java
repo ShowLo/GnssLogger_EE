@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+/*
+ * modified by Chen Jiarong, Department of Electronic Engineering, Tsinghua University
+ */
+
 package com.google.android.apps.location.gps.gnsslogger_ee;
 
 import android.content.Context;
@@ -26,9 +30,23 @@ import android.location.LocationManager;
 import android.location.OnNmeaMessageListener;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.util.Log;
+
+import com.google.location.lbs.gnss.gps.pseudorange.SimulationGpsClock;
+import com.google.location.lbs.gnss.gps.pseudorange.SimulationGpsMeasurement;
+import com.google.location.lbs.gnss.gps.pseudorange.SimulationGpsMeasurementsEvent;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+
 
 /**
  * A container for GPS related API calls, it binds the {@link LocationManager} with {@link UiLogger}
@@ -50,7 +68,12 @@ public class GnssContainer {
   private long ttff = 0L;
   private boolean firstTime = true;
 
+  private static Context mContext = null;
+  private BufferedReader bufferedReader;
+
   private final List<GnssListener> mLoggers;
+
+  private SimulationCalculator simulationCalculator;
 
   private final LocationManager mLocationManager;
   private final LocationListener mLocationListener =
@@ -177,8 +200,13 @@ public class GnssContainer {
       };
 
   public GnssContainer(Context context, GnssListener... loggers) {
+    this.mContext = context;
     this.mLoggers = Arrays.asList(loggers);
     mLocationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+  }
+
+  public void setSimulationCalculator(SimulationCalculator simulationCalculator) {
+    this.simulationCalculator = simulationCalculator;
   }
 
   public LocationManager getLocationManager() {
@@ -300,6 +328,181 @@ public class GnssContainer {
 
   public void unregisterNmea() {
     mLocationManager.removeNmeaListener(nmeaListener);
+  }
+
+  public void startSimulation() {
+    InputStream inputStream = mContext.getResources().openRawResource(R.raw.gnss_log_2018_05_09_15_06_27);
+    InputStreamReader in = new InputStreamReader(inputStream);
+    bufferedReader = new BufferedReader(in);
+    new Thread() {
+      @Override
+      public void run() {
+        super.run();
+        try {
+          String line = null;
+          if (bufferedReader != null) {
+            line = bufferedReader.readLine();
+          }
+          while (bufferedReader != null && line != null) {
+            if (line.substring(0, 1).contains("R")) {
+              System.out.println(line);
+              String[] datas = line.split(",", -1);
+              SimulationGpsMeasurementsEvent gpsMeasurementsEvent = new SimulationGpsMeasurementsEvent();
+              SimulationGpsClock gpsClock = new SimulationGpsClock();
+
+              long elapsedRealtimeMillis = Long.parseLong(datas[1]);
+              long timeNanos = Long.parseLong(datas[2]);
+              gpsClock.setTimeNanos(timeNanos);
+              if (datas[3].equals("")) {
+                gpsClock.setHasLeapSecond(false);
+              } else {
+                gpsClock.setHasLeapSecond(true);
+                gpsClock.setLeapSecond(Integer.parseInt(datas[3]));
+              }
+              if (datas[4].equals("")) {
+                gpsClock.setHasTimeUncertaintyNanos(false);
+              } else {
+                gpsClock.setHasTimeUncertaintyNanos(true);
+                gpsClock.setTimeUncertaintyNanos(Double.parseDouble(datas[4]));
+              }
+              if (datas[5].equals("")) {
+                gpsClock.setHasFullBiasNanos(false);
+              } else {
+                gpsClock.setHasFullBiasNanos(true);
+                gpsClock.setFullBiasNanos(Long.parseLong(datas[5]));
+              }
+              if (datas[6].equals("")) {
+                gpsClock.setHasBiasNanos(false);
+              } else {
+                gpsClock.setHasBiasNanos(true);
+                gpsClock.setBiasNanos(Double.parseDouble(datas[6]));
+              }
+              if (datas[7].equals("")) {
+                gpsClock.setHasBiasUncertaintyNanos(false);
+              } else {
+                gpsClock.setHasBiasUncertaintyNanos(true);
+                gpsClock.setBiasUncertaintyNanos(Double.parseDouble(datas[7]));
+              }
+              if (datas[8].equals("")) {
+                gpsClock.setHasDriftNanosPerSecond(false);
+              } else {
+                gpsClock.setHasDriftNanosPerSecond(true);
+                gpsClock.setDriftNanosPerSecond(Double.parseDouble(datas[8]));
+              }
+              if (datas[9].equals("")) {
+                gpsClock.setHasDriftUncertaintyNanosPerSecond(false);
+              } else {
+                gpsClock.setHasDriftUncertaintyNanosPerSecond(true);
+                gpsClock.setDriftUncertaintyNanosPerSecond(Double.parseDouble(datas[9]));
+              }
+              gpsClock.setHardwareClockDiscontinuityCount(Integer.parseInt(datas[10]));
+
+              gpsMeasurementsEvent.setSimulationGpsClock(gpsClock);
+
+              List<SimulationGpsMeasurement> simulationGpsMeasurements = new ArrayList<>();
+
+              // 相同的timeNanos代表属于同一个时间捕获的measurement
+              String sameGroupMark = datas[2];
+              while (sameGroupMark.equals(datas[2])) {
+                SimulationGpsMeasurement gpsMeasurement = new SimulationGpsMeasurement();
+                gpsMeasurement.setSvid(Integer.parseInt(datas[11]));
+                gpsMeasurement.setTimeOffsetNanos(Double.parseDouble(datas[12]));
+                gpsMeasurement.setState(Integer.parseInt(datas[13]));
+                gpsMeasurement.setReceivedSvTimeNanos(Long.parseLong(datas[14]));
+                gpsMeasurement.setReceivedSvTimeUncertaintyNanos(Long.parseLong(datas[15]));
+                gpsMeasurement.setCn0DbHz(Double.parseDouble(datas[16]));
+                gpsMeasurement.setPseudorangeRateMetersPerSecond(Double.parseDouble(datas[17]));
+                gpsMeasurement.setPseudorangeRateUncertaintyMetersPerSecond(Double.parseDouble(datas[18]));
+                gpsMeasurement.setAccumulatedDeltaRangeState(Integer.parseInt(datas[19]));
+                gpsMeasurement.setAccumulatedDeltaRangeMeters(Double.parseDouble(datas[20]));
+                gpsMeasurement.setAccumulatedDeltaRangeUncertaintyMeters(Double.parseDouble(datas[21]));
+                if (datas[22].equals("")) {
+                  gpsMeasurement.setHasCarrierFrequencyHz(false);
+                } else {
+                  gpsMeasurement.setHasCarrierFrequencyHz(true);
+                  gpsMeasurement.setCarrierFrequencyHz(Float.parseFloat(datas[22]));
+                }
+                if (datas[23].equals("")) {
+                  gpsMeasurement.setHasCarrierCycles(false);
+                } else {
+                  gpsMeasurement.setHasCarrierCycles(true);
+                  gpsMeasurement.setCarrierCycles(Long.parseLong(datas[23]));
+                }
+                if (datas[24].equals("")) {
+                  gpsMeasurement.setHasCarrierPhase(false);
+                } else {
+                  gpsMeasurement.setHasCarrierPhase(true);
+                  gpsMeasurement.setCarrierPhase(Double.parseDouble(datas[24]));
+                }
+                if (datas[25].equals("")) {
+                  gpsMeasurement.setHasCarrierPhaseUncertainty(false);
+                } else {
+                  gpsMeasurement.setHasCarrierPhaseUncertainty(true);
+                  gpsMeasurement.setCarrierPhaseUncertainty(Double.parseDouble(datas[25]));
+                }
+                gpsMeasurement.setMultipathIndicator(Integer.parseInt(datas[26]));
+                if (datas[27].equals("")) {
+                  gpsMeasurement.setHasSnrInDb(false);
+                } else {
+                  gpsMeasurement.setHasSnrInDb(true);
+                  gpsMeasurement.setSnrInDb(Double.parseDouble(datas[27]));
+                }
+                gpsMeasurement.setConstellationType(Integer.parseInt(datas[28]));
+                if (datas[29].equals("")) {
+                  gpsMeasurement.setHasAutomaticGainControlLevelDb(false);
+                } else {
+                  gpsMeasurement.setHasAutomaticGainControlLevelDb(true);
+                  gpsMeasurement.setAutomaticGainControlLevelDb(Double.parseDouble(datas[29]));
+                }
+
+                simulationGpsMeasurements.add(gpsMeasurement);
+
+                if (bufferedReader != null) {
+                  line = bufferedReader.readLine();
+                  if (line != null) {
+                    if (line.substring(0, 1).contains("R")) {
+                      datas = line.split(",", -1);
+                    } else {
+                      break;
+                    }
+                  } else {
+                    break;
+                  }
+                } else {
+                  break;
+                }
+              }
+              gpsMeasurementsEvent.setSimulationGpsMeasurements(
+                  Collections.unmodifiableCollection(simulationGpsMeasurements));
+
+              simulationCalculator.onGnssMeasurementsReceived(
+                  gpsMeasurementsEvent
+              );
+
+              Thread.sleep(3000);
+            } else {
+              line = bufferedReader.readLine();
+            }
+          }
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        } catch (IOException ioe) {
+          Log.d(TAG, "读取模拟输入文件出错");
+          ioe.printStackTrace();
+        }
+      }
+    }.start();
+  }
+
+  public void stopSimulation() {
+    if (bufferedReader != null) {
+      try {
+        bufferedReader.close();
+        bufferedReader = null;
+      } catch (IOException ioe) {
+        Log.d(TAG, "关闭模拟输入文件出错");
+      }
+    }
   }
 
   public void registerAll() {

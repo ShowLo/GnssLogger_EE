@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity
   private static final String[] REQUIRED_PERMISSIONS = {
     Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.WRITE_EXTERNAL_STORAGE
   };
-  private static final int NUMBER_OF_FRAGMENTS = 10;
+  private static final int NUMBER_OF_FRAGMENTS = 11;
   private static final int FRAGMENT_INDEX_SETTING = 0;
   /*private static final int FRAGMENT_INDEX_LOGGER = 1;
   private static final int FRAGMENT_INDEX_LOGGER_LOCATION = 2;
@@ -87,6 +87,7 @@ public class MainActivity extends AppCompatActivity
   private static final int FRAGMENT_INDEX_PLOT = 7;
   private static final int FRAGMENT_INDEX_MAP = 8;
   private static final int FRAGMENT_INDEX_PLOT_PSEUDOLITE = 9;
+  private static final int FRAGMENT_INDEX_SIMULATION = 10;
   private static final String TAG = "MainActivity";
 
   private GnssContainer mGnssContainer;
@@ -99,8 +100,10 @@ public class MainActivity extends AppCompatActivity
   private RealTimePositionVelocityCalculator mRealTimePositionVelocityCalculator;
   private PositionCalculator mPositionCalculator;
   private PseudolitePositionCalculator mPseudolitePositionCalculator;
+  private SimulationCalculator mSimulationCalculator;
   private FileLogger mFileLogger;
   private FileLoggerPseudolite mFileLoggerPseudolite;
+  private FileLoggerSimulation mFileLoggerSimulation;
   // for test
   private TestCalculator mTestCalculator;
   private FileLoggerPseudolite mFileTest;
@@ -235,6 +238,8 @@ public class MainActivity extends AppCompatActivity
           return mFragments[FRAGMENT_INDEX_MAP];
         case FRAGMENT_INDEX_PLOT_PSEUDOLITE:
           return mFragments[FRAGMENT_INDEX_PLOT_PSEUDOLITE];
+        case FRAGMENT_INDEX_SIMULATION:
+          return mFragments[FRAGMENT_INDEX_SIMULATION];
         /*case FRAGMENT_INDEX_TEST:
           return mFragments[FRAGMENT_INDEX_TEST];*/
         default:
@@ -278,6 +283,8 @@ public class MainActivity extends AppCompatActivity
           return getString(R.string.title_map).toUpperCase(locale);
         case FRAGMENT_INDEX_PLOT_PSEUDOLITE:
           return getString(R.string.title_plot_pseudolite).toUpperCase(locale);
+        case FRAGMENT_INDEX_SIMULATION:
+          return getString(R.string.title_simulation).toUpperCase(locale);
         /*case FRAGMENT_INDEX_TEST:
           return getString(R.string.title_test).toUpperCase(locale);*/
         default:
@@ -319,6 +326,12 @@ public class MainActivity extends AppCompatActivity
     mPseudolitePositionCalculator.setMainActivity(this);
     mPseudolitePositionCalculator.setFileLoggerPseudolite(mFileLoggerPseudolite);
 
+    mFileLoggerSimulation = new FileLoggerSimulation(getApplicationContext());
+
+    mSimulationCalculator = new SimulationCalculator(getApplicationContext());
+    mSimulationCalculator.setMainActivity(this);
+    mSimulationCalculator.setFileLoggerSimulation(mFileLoggerSimulation);
+
     //for test
     /*mFileTest = new FileLoggerPseudolite(getApplicationContext());
     mTestCalculator = new TestCalculator();
@@ -342,6 +355,8 @@ public class MainActivity extends AppCompatActivity
             //mTestCalculator,
             //mRealTimePositionVelocityCalculator
             );
+    mGnssContainer.setSimulationCalculator(mSimulationCalculator);
+
     mFragments = new Fragment[NUMBER_OF_FRAGMENTS];
     SettingsFragment settingsFragment = new SettingsFragment();
     settingsFragment.setGpsContainer(mGnssContainer);
@@ -398,6 +413,11 @@ public class MainActivity extends AppCompatActivity
     PlotPseudoliteFragment mPlotPseudoliteFragment = new PlotPseudoliteFragment();
     mFragments[FRAGMENT_INDEX_PLOT_PSEUDOLITE] = mPlotPseudoliteFragment;
     mPseudolitePositionCalculator.setPlotPseudoliteFragment(mPlotPseudoliteFragment);
+
+    SimulationFragment simulationFragment = new SimulationFragment();
+    simulationFragment.setSimulationCalculator(mSimulationCalculator);
+    simulationFragment.setmFileLoggerSimulation(mFileLoggerSimulation);
+    mFragments[FRAGMENT_INDEX_SIMULATION] = simulationFragment;
 
     //for test
     /*TestFragment testFragment = new TestFragment();

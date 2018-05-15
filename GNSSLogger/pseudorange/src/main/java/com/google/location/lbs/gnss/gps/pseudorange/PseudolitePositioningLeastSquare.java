@@ -143,6 +143,8 @@ class PseudolitePositioningLeastSquare {
     double[][] indoorAntennasXyz = pseudoliteMessageStore.getIndoorAntennasXyz();
     int pseudoliteNum = indoorAntennasXyz.length;
 
+    double[] outdoorToIndoorRange = pseudoliteMessageStore.getOutdoorToIndoorRange();
+
     double[] pseudoliteToUserRange = new double[pseudoliteNum];
     double minValue = Double.MAX_VALUE;
 
@@ -194,8 +196,9 @@ class PseudolitePositioningLeastSquare {
       //for visualization
       mAntennaToSatPseudorangesMeters[satellitePRNs[satsCounter] - 1] = satelliteToOutdoorAntennaPseudorange;
 
-      // 卫星到用户伪距减去卫星到室外接收天线的伪距
-      pseudoliteToUserRange[satsCounter] = pseudorangeMeasurementMeters - satelliteToOutdoorAntennaPseudorange;
+      // 室内转发天线到用户距离
+      pseudoliteToUserRange[satsCounter] = pseudorangeMeasurementMeters - satelliteToOutdoorAntennaPseudorange -
+          outdoorToIndoorRange[satsCounter];
 
       // for visualization
       mAntennaToUserPseudorangesMeters[satellitePRNs[satsCounter] - 1] = pseudoliteToUserRange[satsCounter];
@@ -233,10 +236,10 @@ class PseudolitePositioningLeastSquare {
       //    " deltaPseuoRange["+i+"]:"+deltaPseuoRange[i]);
     }
 
-    //Random random = new Random();
-    //double[] simulationPos = {1.0, 1.0, 0.0};
+    /*Random random = new Random();
+    double[] simulationPos = {1.0, 1.0, 0.0};*/
     for (int satsCounter = 0; satsCounter < pseudoliteNum; ++satsCounter) {
-      pseudoliteToUserRange[satsCounter] -= (minValue - minPseuorange);
+      //pseudoliteToUserRange[satsCounter] -= (minValue - minPseuorange);
 
       // 仿真用，假设用户在（1，1，0），同时叠加高斯噪声
       /*double[] r = {indoorAntennasXyz[satsCounter][0] - simulationPos[0],
@@ -399,7 +402,7 @@ class PseudolitePositioningLeastSquare {
       Log.d("伪卫星最小二乘", "delta2:" + delta2);
       //Log.d("伪卫星最小二乘", "norm:" + norm);
 
-      if (delta1 > delta2) {    //accept
+      if (delta1 >= delta2) {    //accept
         lambda /= miu;
         bias = biasTemp;
         for (int i = 0; i < 4; ++i) {
@@ -413,6 +416,8 @@ class PseudolitePositioningLeastSquare {
       }
       Log.d("伪卫星最小二乘", "第" + (MAX_NUM_OF_ITERATION - calTimes) + "次迭代--lambda:" + lambda);
       --calTimes;
+      System.out.print(calTimes+":\t");
+      System.out.println(error);
     }
     /*while (error >= LEAST_SQUARE_TOLERANCE_METERS && calTimes > 0) {
       RealMatrix connectionMatrix = new Array2DRowRealMatrix(calculateGeometryMatrix(
@@ -655,6 +660,23 @@ class PseudolitePositioningLeastSquare {
 
     //calculateGeoidMeters = false;
 
+
+    GeodeticLlaValues latLngAlt =
+        Ecef2LlaConverter.convertECEFToLLACloseForm(
+            positionSolutionECEF[0],
+            positionSolutionECEF[1],
+            positionSolutionECEF[2]);
+    double lat = Math.toDegrees(latLngAlt.latitudeRadians);
+    double lng = Math.toDegrees(latLngAlt.longitudeRadians);
+    double alt = latLngAlt.altitudeMeters;
+    Log.d("伪位置",
+        "Latitude, Longitude, Altitude: "
+            + lat
+            + " "
+            + lng
+            + " "
+            + alt);
+
     return satPosPseudorangeResidualAndWeight;
   }
 
@@ -701,7 +723,8 @@ class PseudolitePositioningLeastSquare {
       // position is below a specific threshold
       if ((Math.abs(deltaPositionMeters[0]) + Math.abs(deltaPositionMeters[1])
           + Math.abs(deltaPositionMeters[2])) < ATMPOSPHERIC_CORRECTIONS_THRESHOLD_METERS) {
-        doAtmosphericCorrections = true;
+        // 暂时不做电离层和对流层校正
+        // doAtmosphericCorrections = true;
       }
       // Calculate satellites' positions, measurement residual per visible satellite and
       // weight matrix for the iterative least square

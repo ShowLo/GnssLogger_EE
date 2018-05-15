@@ -200,6 +200,7 @@ public class SettingsFragment extends Fragment {
             }
           }
         });
+
     final Switch autoScroll = (Switch) view.findViewById(R.id.auto_scroll_on);
     final TextView turnOnAutoScroll = (TextView) view.findViewById(R.id.turn_on_auto_scroll);
     turnOnAutoScroll.setText("Switch is OFF");
@@ -222,114 +223,27 @@ public class SettingsFragment extends Fragment {
           }
         });
 
-    final Switch residualPlotSwitch = (Switch) view.findViewById(R.id.residual_plot_enabled);
-    final TextView turnOnResidual = (TextView) view.findViewById(R.id.turn_on_residual_plot);
-    turnOnResidual.setText("Switch is OFF");
-    residualPlotSwitch.setOnCheckedChangeListener(
+    final Switch registerSimulation = (Switch) view.findViewById(R.id.register_simulation);
+    final TextView registerSimulationLabel =
+        (TextView) view.findViewById(R.id.register_simulation_label);
+    //set the switch to OFF
+    registerSimulation.setChecked(false);
+    registerSimulationLabel.setText("Switch is OFF");
+    registerSimulation.setOnCheckedChangeListener(
         new OnCheckedChangeListener() {
+
           @Override
           public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+
             if (isChecked) {
-
-              LayoutInflater inflater =
-                  (LayoutInflater)
-                      getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-              View layout = inflater.inflate(R.layout.pop_up_window,
-                      (ViewGroup) getActivity().findViewById(R.id.pop));
-
-              // Find UI elements in pop up window
-              final Spinner residualSpinner = layout.findViewById(R.id.residual_spinner);
-              Button buttonOk = layout.findViewById(R.id.popup_button_ok);
-              Button buttonCancel = layout.findViewById(R.id.popup_button_cancel);
-              final TextView longitudeInput = layout.findViewById(R.id.longitude_input);
-              final TextView latitudeInput = layout.findViewById(R.id.latitude_input);
-              final TextView altitudeInput = layout.findViewById(R.id.altitude_input);
-
-              // Set up pop up window attributes
-              final PopupWindow popupWindow =
-                  new PopupWindow(layout, LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-              popupWindow.setOutsideTouchable(false);
-              popupWindow.showAtLocation(
-                  view.findViewById(R.id.setting_root), Gravity.CENTER, 0, 0);
-              View container = (View) popupWindow.getContentView().getParent();
-              WindowManager wm =
-                  (WindowManager) getActivity().getSystemService(Context.WINDOW_SERVICE);
-              WindowManager.LayoutParams params =
-                  (WindowManager.LayoutParams) container.getLayoutParams();
-              params.flags = WindowManager.LayoutParams.FLAG_DIM_BEHIND;
-              params.dimAmount = 0.5f;
-              wm.updateViewLayout(container, params);
-              mResidualSetting = RealTimePositionVelocityCalculator.RESIDUAL_MODE_DISABLED;
-              // When the window is dismissed same as cancel
-              popupWindow.setOnDismissListener(
-                  new OnDismissListener() {
-                    @Override
-                    public void onDismiss() {
-                      if (mResidualSetting
-                          == RealTimePositionVelocityCalculator.RESIDUAL_MODE_DISABLED){
-                        residualPlotSwitch.setChecked(false);
-                      } else {
-                        mRealTimePositionVelocityCalculator
-                            .setResidualPlotMode
-                                (mResidualSetting,
-                                    mFixedReferenceLocation);
-                        turnOnResidual.setText("Switch is ON");
-                      }
-                    }
-                  }
-              );
-
-              buttonCancel.setOnClickListener(
-                  new OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                      popupWindow.dismiss();
-                    }
-                  }
-              );
-
-              // Button handler to dismiss the window and store settings
-              buttonOk.setOnClickListener(
-                  new OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                      double longitudeDegrees =
-                          longitudeInput.getText().toString().equals("")
-                              ? Double.NaN
-                              : Double.parseDouble(longitudeInput.getText().toString());
-                      double latitudeDegrees =
-                          latitudeInput.getText().toString().equals("")
-                              ? Double.NaN
-                              : Double.parseDouble(latitudeInput.getText().toString());
-                      double altitudeMeters =
-                          altitudeInput.getText().toString().equals("")
-                              ? Double.NaN
-                              : Double.parseDouble(altitudeInput.getText().toString());
-                      mFixedReferenceLocation =
-                          new double[] {latitudeDegrees, longitudeDegrees, altitudeMeters};
-                      mResidualSetting = residualSpinner.getSelectedItemPosition();
-
-                      // If user select auto, we need to put moving first and turn on AR updates
-                      if (mResidualSetting == AUTO_GROUND_TRUTH_MODE) {
-                        mResidualSetting
-                            = RealTimePositionVelocityCalculator.RESIDUAL_MODE_MOVING;
-                        mModeSwitcher.setAutoSwitchGroundTruthModeEnabled(true);
-                      }
-                      popupWindow.dismiss();
-                    }
-                  }
-              );
-
+              mGpsContainer.startSimulation();
+              registerSimulationLabel.setText("Switch is ON");
             } else {
-                  mModeSwitcher.setAutoSwitchGroundTruthModeEnabled(false);
-                  mRealTimePositionVelocityCalculator.setResidualPlotMode(
-                      RealTimePositionVelocityCalculator.RESIDUAL_MODE_DISABLED,
-                      mFixedReferenceLocation);
-                  turnOnResidual.setText("Switch is OFF");
+              mGpsContainer.stopSimulation();
+              registerSimulationLabel.setText("Switch is OFF");
             }
           }
-        }
-    );
+        });
 
     Button exit = (Button) view.findViewById(R.id.exit);
     exit.setOnClickListener(

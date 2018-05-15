@@ -147,15 +147,15 @@
         android:layout_height="wrap_content"
         android:textStyle="bold"
         android:layout_marginTop="15dp"
-        android:id="@+id/turn_on_residual_plot" />
+        android:id="@+id/register_simulation_label" />
     <Switch
         android:layout_width="0dp"
         android:layout_weight="1"
         android:layout_height="wrap_content"
-        android:id="@+id/residual_plot_enabled"
+        android:id="@+id/register_simulation"
         android:singleLine="true"
         android:layout_marginTop="15dp"
-        android:text="@string/residual_plot" />
+        android:text="@string/simulation_label" />
   </LinearLayout>
 
   <RelativeLayout

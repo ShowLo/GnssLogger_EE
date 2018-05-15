@@ -11,11 +11,10 @@ package com.google.location.lbs.gnss.gps.pseudorange;
  */
 public class PseudoliteMessageStore {
 
-  private final double[] outdoorAntennaLla = {40.001144, 116.330155, 80.0};
-  private final double[][] indoorAntennasXyz = {{602.0, 414.1, 171.9},
-      {-586.9, 303.31, 251.0}, {667.9, -562.3, 258.2}, {-583.3, -482.5, 314.3}};
-  /*private final double[][] indoorAntennasXyz = {{1, 1, 1},
-      {-1, 1, -1}, {1, -1, -1}, {-1, -1, 1}};*/
+  private final double[] outdoorAntennaLla = {40.0, 118.0, 100.0};
+  private final double[][] indoorAntennasXyz = {{4.307, 2.591, 2.696},
+      {-10.229, -1.914, 2.598}, {1.509, -6.977, 2.781}, {-4.867, 5.233, 2.598}};
+  private final double[] outdoorToIndoorRange = {12.0, 16.0, 12.0, 16.0};
 
   public double[] getOutdoorAntennaLla() {
     return outdoorAntennaLla;
@@ -23,5 +22,9 @@ public class PseudoliteMessageStore {
 
   public double[][] getIndoorAntennasXyz() {
     return indoorAntennasXyz;
+  }
+
+  public double[] getOutdoorToIndoorRange() {
+    return outdoorToIndoorRange;
   }
 }

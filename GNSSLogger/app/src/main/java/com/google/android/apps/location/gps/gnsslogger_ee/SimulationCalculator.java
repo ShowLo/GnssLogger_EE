@@ -20,41 +20,42 @@
 
 package com.google.android.apps.location.gps.gnsslogger_ee;
 
+import android.content.Context;
 import android.graphics.Color;
-import android.location.GnssMeasurementsEvent;
-import android.location.GnssNavigationMessage;
-import android.location.GnssStatus;
-import android.location.Location;
-import android.location.LocationManager;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
 
-import com.google.android.apps.location.gps.gnsslogger_ee.PseudoliteFragment.UiPseudoliteFragmentComponent;
-import com.google.location.lbs.gnss.gps.pseudorange.PseudolitePositioningFromRealTimeEvents;
+import com.google.android.apps.location.gps.gnsslogger_ee.SimulationFragment.UiSimulationFragmentComponent;
+import com.google.location.lbs.gnss.gps.pseudorange.PseudolitePositioningFromSimulationEvents;
+import com.google.location.lbs.gnss.gps.pseudorange.SimulationGpsMeasurementsEvent;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.text.DecimalFormat;
 import java.util.concurrent.TimeUnit;
 
 /**
- * A class that handles real time psdudolite positioning, passing {@link GnssMeasurementsEvent}
- * instances to the {@link PseudolitePositioningFromRealTimeEvents} whenever a new raw
+ * A class that handles simulation, passing {@link SimulationGpsMeasurementsEvent}
+ * instances to the {@link PseudolitePositioningFromSimulationEvents} whenever a
  * measurement is received in order to compute a new position solution. The computed
- * position solutions are passed to the {@link PseudoliteFragment} to be visualized.
+ * position solutions are passed to the {@link SimulationFragment} to be visualized.
  */
-public class PseudolitePositionCalculator implements GnssListener {
+public class SimulationCalculator {
 
   private static final long EARTH_RADIUS_METERS = 6371000;
-  private PseudolitePositioningFromRealTimeEvents
-      mPseudolitePositioningFromRealTimeEvents;
+  private PseudolitePositioningFromSimulationEvents
+      mPseudolitePositioningFromSimulationEvents;
   private HandlerThread mPositionCalculationHandlerThread;
   private Handler mMyPositionCalculationHandler;
   private int mCurrentColor = Color.rgb(0x4a, 0x5f, 0x70);
   private int mCurrentColorIndex = 0;
   private boolean mAllowShowingRawResults = false;
   private MainActivity mMainActivity;
-  private PlotPseudoliteFragment mPlotPseudoliteFragment;
+  private static Context mContext = null;
+  /*private PlotPseudoliteFragment mPlotPseudoliteFragment;
   private int[] mRgbColorArray = {
     Color.rgb(0x4a, 0x5f, 0x70),
     Color.rgb(0x7f, 0x82, 0x5f),
@@ -65,17 +66,18 @@ public class PseudolitePositionCalculator implements GnssListener {
 
   public void setPlotPseudoliteFragment(PlotPseudoliteFragment plotPseudoliteFragment) {
     this.mPlotPseudoliteFragment = plotPseudoliteFragment;
+  }*/
+
+  private FileLoggerSimulation mFileLoggerSimulation;
+
+  public synchronized void setFileLoggerSimulation(FileLoggerSimulation value) {
+    mFileLoggerSimulation = value;
   }
 
-  private FileLoggerPseudolite mFileLoggerPseudolite;
-
-  public synchronized void setFileLoggerPseudolite(FileLoggerPseudolite value) {
-    mFileLoggerPseudolite = value;
-  }
-
-  public PseudolitePositionCalculator() {
+  public SimulationCalculator(Context context) {
+    this.mContext = context;
     mPositionCalculationHandlerThread =
-        new HandlerThread("Pseudolite Positioning");
+        new HandlerThread("Pseudolite Positioning for simulation");
     mPositionCalculationHandlerThread.start();
     mMyPositionCalculationHandler =
         new Handler(mPositionCalculationHandlerThread.getLooper());
@@ -85,12 +87,12 @@ public class PseudolitePositionCalculator implements GnssListener {
           @Override
           public void run() {
             try {
-              mPseudolitePositioningFromRealTimeEvents =
-                  new PseudolitePositioningFromRealTimeEvents();
+              mPseudolitePositioningFromSimulationEvents =
+                  new PseudolitePositioningFromSimulationEvents();
             } catch (Exception e) {
               Log.e(
                   GnssContainer.TAG,
-                  " Exception in constructing PseudolitePositioningFromRealTimeEvents : ",
+                  " Exception in constructing PseudolitePositioningFromSimulationEvents : ",
                   e);
             }
           }
@@ -99,57 +101,17 @@ public class PseudolitePositionCalculator implements GnssListener {
     mMyPositionCalculationHandler.post(r);
   }
 
-  private UiPseudoliteFragmentComponent uiPseudoliteComponent;
+  private UiSimulationFragmentComponent uiSimulationComponent;
 
-  public synchronized UiPseudoliteFragmentComponent getUiPseudoliteComponent() {
-    return uiPseudoliteComponent;
+  public synchronized UiSimulationFragmentComponent getUiSimulationComponent() {
+    return uiSimulationComponent;
   }
 
-  public synchronized void setUiPseudoliteComponent(UiPseudoliteFragmentComponent value) {
-    uiPseudoliteComponent = value;
+  public synchronized void setUiSimulationComponent(UiSimulationFragmentComponent value) {
+    uiSimulationComponent = value;
   }
 
-  @Override
-  public void onProviderEnabled(String provider) {}
-
-  @Override
-  public void onProviderDisabled(String provider) {}
-
-  @Override
-  public void onGnssStatusChanged(GnssStatus gnssStatus) {}
-
-  /**
-   * Update the reference location in {@link PseudolitePositioningFromRealTimeEvents} if the
-   * received location is a network location. Otherwise, update the {@link PseudoliteFragment} to
-   * visualize the result of pseudolite positioning computed from the raw data.
-   */
-  @Override
-  public void onLocationChanged(final Location location) {
-    final Runnable r =
-        new Runnable() {
-          @Override
-          public void run() {
-            if (mPseudolitePositioningFromRealTimeEvents == null) {
-              return;
-            }
-            try {
-              mPseudolitePositioningFromRealTimeEvents.setReferencePosition(
-                  (int) (location.getLatitude() * 1E7),
-                  (int) (location.getLongitude() * 1E7),
-                  (int) (location.getAltitude() * 1E7));
-            } catch (Exception e) {
-              Log.e(GnssContainer.TAG, " Exception setting reference location : ", e);
-            }
-          }
-        };
-    mMyPositionCalculationHandler.post(r);
-  }
-
-  @Override
-  public void onLocationStatusChanged(String provider, int status, Bundle extras) {}
-
-  @Override
-  public void onGnssMeasurementsReceived(final GnssMeasurementsEvent event) {
+  public void onGnssMeasurementsReceived(final SimulationGpsMeasurementsEvent event) {
     mAllowShowingRawResults = true;
     final Runnable r =
         new Runnable() {
@@ -161,19 +123,20 @@ public class PseudolitePositionCalculator implements GnssListener {
                   public void run() {
                   }
                 });
-            if (mPseudolitePositioningFromRealTimeEvents == null) {
+            if (mPseudolitePositioningFromSimulationEvents == null) {
               return;
             }
             try {
-              mPseudolitePositioningFromRealTimeEvents
-                  .computePseudolitePositioningSolutionsFromRawMeas(event);
+              mPseudolitePositioningFromSimulationEvents.setEph(readEph());
+              mPseudolitePositioningFromSimulationEvents
+                  .computePseudolitePositioningSolutionsFromSimulation(event);
 
               mMainActivity.runOnUiThread(
                   new Runnable() {
                     @Override
                     public void run() {
                       long timeSeconds = TimeUnit.NANOSECONDS.toSeconds(event.getClock().getTimeNanos());
-                      mPlotPseudoliteFragment.updateRawPseudorangesTab(
+                      /*mPlotPseudoliteFragment.updateRawPseudorangesTab(
                           mPseudolitePositioningFromRealTimeEvents.getRawPseudorangesMeters(), timeSeconds);
                       mPlotPseudoliteFragment.updateAntennaToSatPseudorangesTab(
                           mPseudolitePositioningFromRealTimeEvents.getAntennaToSatPseudorangesMeters(), timeSeconds);
@@ -190,15 +153,15 @@ public class PseudolitePositionCalculator implements GnssListener {
                       mPlotPseudoliteFragment.updateAntennaToSatPseudorangesRateTab(
                           mPseudolitePositioningFromRealTimeEvents.getAntennaToSatPseudorangesRateMps(), timeSeconds);
                       mPlotPseudoliteFragment.updateAntennaToUserPseudorangesRateTab(
-                          mPseudolitePositioningFromRealTimeEvents.getAntennaToUserPseudorangesRateMps(), timeSeconds);
+                          mPseudolitePositioningFromRealTimeEvents.getAntennaToUserPseudorangesRateMps(), timeSeconds);*/
                     }
                   }
               );
 
               double[] posSolution =
-                  mPseudolitePositioningFromRealTimeEvents.getPseudolitePositioningSolutionXYZ();
+                  mPseudolitePositioningFromSimulationEvents.getPseudolitePositioningSolutionXYZ();
               if (Double.isNaN(posSolution[0])) {
-                logPseudolitePositioningFromRawDataEvent("No result Calculated Yet");
+                logPseudolitePositioningFromSimulationEvent("No result Calculated Yet");
               } else {
                 String formattedXMeters = new DecimalFormat("##.###").format(posSolution[0]);
                 String formattedYMeters = new DecimalFormat("##.###").format(posSolution[1]);
@@ -209,9 +172,9 @@ public class PseudolitePositionCalculator implements GnssListener {
                     + formattedYMeters
                     + " zMeters = "
                     + formattedZMeters;
-                logPseudolitePositioningFromRawDataEvent(message);
-                if (mFileLoggerPseudolite.getEnableWrite()) {
-                  mFileLoggerPseudolite.writeNewMessage(message);
+                logPseudolitePositioningFromSimulationEvent(message);
+                if (mFileLoggerSimulation.getEnableWrite()) {
+                  mFileLoggerSimulation.writeNewMessage(message);
                 }
               }
             } catch (Exception e) {
@@ -222,25 +185,6 @@ public class PseudolitePositionCalculator implements GnssListener {
     mMyPositionCalculationHandler.post(r);
   }
 
-  @Override
-  public void onGnssMeasurementsStatusChanged(int status) {}
-
-  @Override
-  public void onGnssNavigationMessageReceived(GnssNavigationMessage event) {
-    if (event.getType() == GnssNavigationMessage.TYPE_GPS_L1CA) {
-      mPseudolitePositioningFromRealTimeEvents.parseHwNavigationMessageUpdates(event);
-    }
-  }
-
-  @Override
-  public void onGnssNavigationMessageStatusChanged(int status) {}
-
-  @Override
-  public void onNmeaReceived(long l, String s) {}
-
-  @Override
-  public void onListenerRegistration(String listener, boolean result) {}
-
   private void logEvent(String tag, String message, int color) {
     String composedTag = GnssContainer.TAG + tag;
     Log.d(composedTag, message);
@@ -248,14 +192,14 @@ public class PseudolitePositionCalculator implements GnssListener {
   }
 
   private void logText(String tag, String text, int color) {
-    UiPseudoliteFragmentComponent component = getUiPseudoliteComponent();
+    UiSimulationFragmentComponent component = getUiSimulationComponent();
     if (component != null) {
       component.logTextFragment(tag, text, color);
     }
   }
 
-  private void logPseudolitePositioningFromRawDataEvent(String event) {
-    logEvent("Calculated the result of pseudolite positioning From Raw Data", event + "\n", mCurrentColor);
+  private void logPseudolitePositioningFromSimulationEvent(String event) {
+    logEvent("Calculated the result of pseudolite positioning From Simulation", event + "\n", mCurrentColor);
   }
 
   /**
@@ -265,6 +209,37 @@ public class PseudolitePositionCalculator implements GnssListener {
     this.mMainActivity = mainActivity;
   }
 
-  @Override
-  public void onTTFFReceived(long l) {}
+  protected String[] readEph() {
+    int satelliteNum = 7;
+    int oneSatelliteLineNum = 8;
+    String[] eph = new String[satelliteNum * oneSatelliteLineNum];
+    String line;
+    boolean hasPassHeader = false;
+
+    int lineCount = 0;
+
+    try {
+
+      InputStream inputStream = mContext.getResources().openRawResource(R.raw.ephl1_2018_01_18_a1);
+      InputStreamReader in = new InputStreamReader(inputStream);
+      BufferedReader br = new BufferedReader(in);
+
+      while (lineCount < satelliteNum * oneSatelliteLineNum) {
+        line = br.readLine();
+        if (!hasPassHeader) {
+          hasPassHeader = line.contains("END OF HEADER");
+        } else {
+          eph[lineCount++] = line;
+        }
+      }
+      br.close();
+    } catch (IOException ioe) {
+      ioe.printStackTrace();
+      Log.d("SimulationCalculator", "读取星历文件出错");
+      return null;
+    }
+
+    return eph;
+  }
+
 }

@@ -62,7 +62,7 @@ import java.util.concurrent.TimeUnit;
 public class PlotPseudoliteFragment extends Fragment {
 
   /** Total number of kinds of plot tabs */
-  private static final int NUMBER_OF_TABS = 6;
+  private static final int NUMBER_OF_TABS = 9;
 
   /** The position of the raw pseudorange over time plot tab */
   private static final int RAW_PSEUDORANGE_TAB = 0;
@@ -81,6 +81,15 @@ public class PlotPseudoliteFragment extends Fragment {
 
   /** The position of the change of pseudorange of the indoor antenna to user over time plot tab*/
   private static final int CHANGE_ANTENNA_TO_USER_PSEUDORANGE_TAB = 5;
+
+  /** The position of the raw pseudorange rate over time plot tab */
+  private static final int RAW_PSEUDORANGE_RATE_TAB = 6;
+
+  /** The position of the pseudorange rate of the outdoor antenna to satellite over time plot tab*/
+  private static final int ANTENNA_TO_SAT_PSEUDORANGE_RATE_TAB = 7;
+
+  /** The position of the pseudorange rate of the indoor antenna to user over time plot tab*/
+  private static final int ANTENNA_TO_USER_PSEUDORANGE_RATE_TAB = 8;
 
   /** The X range of the plot, we are keeping the latest one minute visible */
   private static final double TIME_INTERVAL_SECONDS = 60;
@@ -268,6 +277,42 @@ public class PlotPseudoliteFragment extends Fragment {
    */
   protected void updateChangeOfAntennaToUserPseudorangesTab(double[] changeOfAntennaToUserPseudoranges, double timeInSeconds) {
     updatePseudorangeRelatedTab(changeOfAntennaToUserPseudoranges, timeInSeconds, CHANGE_ANTENNA_TO_USER_PSEUDORANGE_TAB);
+  }
+
+  /**
+   * Updates the raw pseudorange rate plot
+   *
+   * @param rawPseudorangesRate An array of MAX_NUMBER_OF_SATELLITES elements where indexes of satellites was
+   *        not seen are fixed with {@code Double.NaN} and indexes of satellites what were seen
+   *        are filled with raw pseudorange rate in m/s
+   * @param timeInSeconds the time at which measurements are received
+   */
+  protected void updateRawPseudorangesRateTab(double[] rawPseudorangesRate, double timeInSeconds) {
+    updatePseudorangeRelatedTab(rawPseudorangesRate, timeInSeconds, RAW_PSEUDORANGE_RATE_TAB);
+  }
+
+  /**
+   * Updates the pseudorange rate from the outdoor antenna to satellites
+   *
+   * @param antennaToSatPseudorangesRate An array of MAX_NUMBER_OF_SATELLITES elements where indexes of satellites was
+   *        not seen are fixed with {@code Double.NaN} and indexes of satellites what were seen
+   *        are filled with pseudorange rate from itself to the outdoor antenna in m/s
+   * @param timeInSeconds the time at which measurements are received
+   */
+  protected void updateAntennaToSatPseudorangesRateTab(double[] antennaToSatPseudorangesRate, double timeInSeconds) {
+    updatePseudorangeRelatedTab(antennaToSatPseudorangesRate, timeInSeconds, ANTENNA_TO_SAT_PSEUDORANGE_RATE_TAB);
+  }
+
+  /**
+   * Updates the pseudorange rate from the indoor antenna to user
+   *
+   * @param antennaToUserPseudorangesRate An array of MAX_NUMBER_OF_SATELLITES elements where indexes of satellites was
+   *        not seen are fixed with {@code Double.NaN} and indexes of satellites what were seen
+   *        are filled with pseudorange rate from indoor antenna to user in meters
+   * @param timeInSeconds the time at which measurements are received
+   */
+  protected void updateAntennaToUserPseudorangesRateTab(double[] antennaToUserPseudorangesRate, double timeInSeconds) {
+    updatePseudorangeRelatedTab(antennaToUserPseudorangesRate, timeInSeconds, ANTENNA_TO_USER_PSEUDORANGE_RATE_TAB);
   }
 
   /**

@@ -16,6 +16,7 @@
     <string name="title_plot">Plot</string>
     <string name="title_map">Map</string>
     <string name="title_plot_pseudolite">Plot Pseudolite</string>
+    <string name="title_simulation">Simulation</string>
     <string name="title_test">Test</string>
     <string name="title_device">Device</string>
     <string name="title_wls">WLS</string>
@@ -26,7 +27,7 @@
     <string name="gnss_status_label">GnssStatus</string>
     <string name="nmea_label">Nmea</string>
     <string name="auto_scroll">Auto Scroll</string>
-    <string name="residual_plot">Residual Plot</string>
+    <string name="simulation_label">Simulation</string>
 
     <string name="help">HELP</string>
     <string name="exit">Exit</string>
@@ -84,6 +85,9 @@
         <item>Change of Raw Pseudoranges</item>
         <item>Change of Outdoor Antenna to Sat Pseudoranges</item>
         <item>Change of Indoor Antenna to User Pseudoranges</item>
+        <item>Raw Pseudoranges Rate</item>
+        <item>Outdoor Antenna to Sat Pseudoranges Rate</item>
+        <item>Indoor Antenna to User Pseudoranges Rate</item>
     </string-array>
     <string-array name="residual_options">
         <item>Manual - Still</item>
@@ -102,5 +106,8 @@
         <item>Change of Raw Pseudorange(m) vs Time(s)</item>
         <item>Change of Outdoor Antenna to Sat Pseudorange(m) vs Time(s)</item>
         <item>Change of Indoor Antenna to User Pseudorange(m) vs Time(s)</item>
+        <item>Raw Pseudorange Rate(m/s) vs Time(s)</item>
+        <item>Outdoor Antenna to Sat Pseudorange Rate(m/s) vs Time(s)</item>
+        <item>Indoor Antenna to User Pseudorange Rate(m/s) vs Time(s)</item>
     </string-array>
 </resources>
