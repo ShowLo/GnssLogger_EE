@@ -331,7 +331,7 @@ public class GnssContainer {
   }
 
   public void startSimulation() {
-    InputStream inputStream = mContext.getResources().openRawResource(R.raw.gnss_log_2018_05_09_15_06_27);
+    InputStream inputStream = mContext.getResources().openRawResource(R.raw.gnss_log_2018_05_09_15_47_23);
     InputStreamReader in = new InputStreamReader(inputStream);
     bufferedReader = new BufferedReader(in);
     new Thread() {
@@ -479,7 +479,7 @@ public class GnssContainer {
                   gpsMeasurementsEvent
               );
 
-              Thread.sleep(3000);
+              Thread.sleep(5000);
             } else {
               line = bufferedReader.readLine();
             }

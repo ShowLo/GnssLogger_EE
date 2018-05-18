@@ -91,7 +91,11 @@ public class PseudolitePositioningFromSimulationEvents {
   private boolean readEphFromFile = true;
   private static final String ephFileName = "EphL1_2018-01-18_A1.txt";
 
-/*  private double[] mRawPseudorangesMeters =
+  private double[] mCn0DbHz =
+      GpsMathOperations.createAndFillArray(
+          GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES, Double.NaN
+      );
+  private double[] mRawPseudorangesMeters =
       GpsMathOperations.createAndFillArray(
           GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES, Double.NaN
       );
@@ -162,7 +166,7 @@ public class PseudolitePositioningFromSimulationEvents {
   private double[] mPrevTimeForAntennaToUserPseudorangesSecond =
       GpsMathOperations.createAndFillArray(
           GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES, Double.NaN
-      );*/
+      );
 
   /**
    * Computes Weighted least square position solutions from a received {@link
@@ -171,7 +175,11 @@ public class PseudolitePositioningFromSimulationEvents {
    */
   public void computePseudolitePositioningSolutionsFromSimulation(SimulationGpsMeasurementsEvent event)
       throws Exception {
-/*    mRawPseudorangesMeters =
+    mCn0DbHz =
+        GpsMathOperations.createAndFillArray(
+            GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES, Double.NaN
+        );
+    mRawPseudorangesMeters =
         GpsMathOperations.createAndFillArray(
             GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES, Double.NaN
         );
@@ -206,7 +214,7 @@ public class PseudolitePositioningFromSimulationEvents {
     mAntennaToUserPseudorangesRateMps =
         GpsMathOperations.createAndFillArray(
             GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES, Double.NaN
-        );*/
+        );
 
     for (int i = 0; i < GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES; i++) {
       mUsefulSatellitesToReceiverMeasurements[i] = null;
@@ -224,6 +232,9 @@ public class PseudolitePositioningFromSimulationEvents {
       // ignore any measurement if it is not from GPS constellation
       if (measurement.getConstellationType() != GnssStatus.CONSTELLATION_GPS) {
         continue;
+      }
+      else {
+        mCn0DbHz[measurement.getSvid() - 1] = measurement.getCn0DbHz();
       }
       // ignore raw data if time is zero, if signal to noise ratio is below thresholmd or if
       // TOW is not yet decoded
@@ -378,7 +389,6 @@ public class PseudolitePositioningFromSimulationEvents {
             usefulSatellitesToTOWNs,
             biasNanos);
 
-/*
     for (int i = 0; i < GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES; ++i) {
       if (usefulSatellitesToPseudorangeMeasurements.get(i) != null) {
         mRawPseudorangesMeters[i] = usefulSatellitesToPseudorangeMeasurements.get(i).pseudorangeMeters;
@@ -386,6 +396,7 @@ public class PseudolitePositioningFromSimulationEvents {
         if (Double.isNaN(mInitialRawPseudorangesMeters[i])) {
           mInitialRawPseudorangesMeters[i] = mRawPseudorangesMeters[i];
         }
+        mChangeOfRawPseudorangesMeters[i] = mRawPseudorangesMeters[i] - mInitialRawPseudorangesMeters[i];
         // 计算原始伪距变化率（用当前测量与上一个测量的差表示）
         if (!Double.isNaN(mPrevTimeForRawPseudorangesSecond[i])) {
           mRawPseudorangesRateMps[i] = (mRawPseudorangesMeters[i] - mPrevRawPseudorangesMeters[i])
@@ -398,7 +409,6 @@ public class PseudolitePositioningFromSimulationEvents {
         mRawPseudorangesMeters[i] = Double.NaN;
       }
     }
-*/
 
     // calculate iterative least square position solution and velocity solutions
     pseudolitePositioningLeastSquare.calculatePseudolitePositioningLeastSquare(
@@ -409,7 +419,6 @@ public class PseudolitePositioningFromSimulationEvents {
         gpsWeekNumber,
         dayOfYear1To366,
         positionSolution);
-/*
     // 卫星到室外天线伪距观测量
     mAntennaToSatPseudorangesMeters = pseudolitePositioningLeastSquare.getAntennaToSatPseudorangesMeters();
     for (int i = 0; i < GpsNavigationMessageStore.MAX_NUMBER_OF_SATELLITES; ++i) {
@@ -454,7 +463,7 @@ public class PseudolitePositioningFromSimulationEvents {
         mPrevAntennaToUserPseudorangesMeters[i] = mAntennaToUserPseudorangesMeters[i];
         mPrevTimeForAntennaToUserPseudorangesSecond[i] = arrivalTimeSinceGPSWeekNs * SECONDS_PER_NANO;
       }
-    }*/
+    }
 
     Log.d(
         TAG,
@@ -595,65 +604,72 @@ public class PseudolitePositioningFromSimulationEvents {
   }
 
   /**
+   * Returns the SNR
+   */
+  public double[] getCn0DbHz() {
+    return mCn0DbHz;
+  }
+
+  /**
    * Returns the raw pseudoranges
    */
-  /*public double[] getRawPseudorangesMeters() {
+  public double[] getRawPseudorangesMeters() {
     return mRawPseudorangesMeters;
-  }*/
+  }
 
   /**
    * Returns the pseudoranges from the outdoor antenna to satellite
    */
-/*  public double[] getAntennaToSatPseudorangesMeters() {
+  public double[] getAntennaToSatPseudorangesMeters() {
     return mAntennaToSatPseudorangesMeters;
-  }*/
+  }
 
   /**
    * Returns the pseudoranges from the indoor antenna to user
    */
-/*  public double[] getAntennaToUserPseudorangesMeters() {
+  public double[] getAntennaToUserPseudorangesMeters() {
     return mAntennaToUserPseudorangesMeters;
-  }*/
+  }
 
   /**
    * Returns the change of raw pseudoranges
    */
-/*  public double[] getChangeOfRawPseudorangesMeters() {
+  public double[] getChangeOfRawPseudorangesMeters() {
     return mChangeOfRawPseudorangesMeters;
-  }*/
+  }
 
   /**
    * Returns the change of pseudoranges from the outdoor antenna to satellite
    */
-/*  public double[] getChangeOfAntennaToSatPseudorangesMeters() {
+  public double[] getChangeOfAntennaToSatPseudorangesMeters() {
     return mChangeOfAntennaToSatPseudorangesMeters;
-  }*/
+  }
 
   /**
    * Returns the change of pseudoranges from the indoor antenna to user
    */
-/*  public double[] getChangeOfAntennaToUserPseudorangesMeters() {
+  public double[] getChangeOfAntennaToUserPseudorangesMeters() {
     return mChangeOfAntennaToUserPseudorangesMeters;
-  }*/
+  }
 
   /**
    * Returns the raw pseudoranges rate
    */
-/*  public double[] getRawPseudorangesRateMps() {
+  public double[] getRawPseudorangesRateMps() {
     return mRawPseudorangesRateMps;
-  }*/
+  }
 
   /**
    * Returns the pseudoranges rate from the outdoor antenna to satellite
    */
-/*  public double[] getAntennaToSatPseudorangesRateMps() {
+  public double[] getAntennaToSatPseudorangesRateMps() {
     return mAntennaToSatPseudorangesRateMps;
-  }*/
+  }
 
   /**
    * Returns the pseudoranges from the indoor antenna to user
    */
-/*  public double[] getAntennaToUserPseudorangesRateMps() {
+  public double[] getAntennaToUserPseudorangesRateMps() {
     return mAntennaToUserPseudorangesRateMps;
-  }*/
+  }
 }

@@ -79,6 +79,7 @@
         <item>Pseudoranges</item>
     </string-array>
     <string-array name="tabspinner_arrays">
+        <item>C/N0</item>
         <item>Raw Pseudoranges</item>
         <item>Outdoor Antenna to Sat Pseudoranges</item>
         <item>Indoor Antenna to User Pseudoranges</item>
@@ -88,6 +89,8 @@
         <item>Raw Pseudoranges Rate</item>
         <item>Outdoor Antenna to Sat Pseudoranges Rate</item>
         <item>Indoor Antenna to User Pseudoranges Rate</item>
+        <item>Pseudolite Positioning Result</item>
+        <item>Height of Psdudolite Positioning Result</item>
     </string-array>
     <string-array name="residual_options">
         <item>Manual - Still</item>
@@ -100,6 +103,7 @@
         <item>Pseudorange(m) vs Time(s)</item>
     </string-array>
     <string-array name="plot_pseudolite_titles">
+        <item>C/N0(dB.Hz) vs Time(s)</item>
         <item>Raw Pseudorange(m) vs Time(s)</item>
         <item>Outdoor Antenna to Sat Pseudorange(m) vs Time(s)</item>
         <item>Indoor Antenna to User Pseudorange(m) vs Time(s)</item>
@@ -109,5 +113,7 @@
         <item>Raw Pseudorange Rate(m/s) vs Time(s)</item>
         <item>Outdoor Antenna to Sat Pseudorange Rate(m/s) vs Time(s)</item>
         <item>Indoor Antenna to User Pseudorange Rate(m/s) vs Time(s)</item>
+        <item>Position : y(m) vs x(m)</item>
+        <item>Height of position : Height(m) vs Time(s)</item>
     </string-array>
 </resources>

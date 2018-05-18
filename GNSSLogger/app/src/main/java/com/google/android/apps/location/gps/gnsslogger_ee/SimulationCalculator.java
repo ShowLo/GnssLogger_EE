@@ -55,7 +55,7 @@ public class SimulationCalculator {
   private boolean mAllowShowingRawResults = false;
   private MainActivity mMainActivity;
   private static Context mContext = null;
-  /*private PlotPseudoliteFragment mPlotPseudoliteFragment;
+  private PlotPseudoliteFragment mPlotSimulationFragment;
   private int[] mRgbColorArray = {
     Color.rgb(0x4a, 0x5f, 0x70),
     Color.rgb(0x7f, 0x82, 0x5f),
@@ -64,9 +64,9 @@ public class SimulationCalculator {
     Color.rgb(0x66, 0x77, 0x7d)
   };
 
-  public void setPlotPseudoliteFragment(PlotPseudoliteFragment plotPseudoliteFragment) {
-    this.mPlotPseudoliteFragment = plotPseudoliteFragment;
-  }*/
+  public void setPlotSimulationFragment(PlotPseudoliteFragment plotSimulationFragment) {
+    this.mPlotSimulationFragment = plotSimulationFragment;
+  }
 
   private FileLoggerSimulation mFileLoggerSimulation;
 
@@ -136,24 +136,29 @@ public class SimulationCalculator {
                     @Override
                     public void run() {
                       long timeSeconds = TimeUnit.NANOSECONDS.toSeconds(event.getClock().getTimeNanos());
-                      /*mPlotPseudoliteFragment.updateRawPseudorangesTab(
-                          mPseudolitePositioningFromRealTimeEvents.getRawPseudorangesMeters(), timeSeconds);
-                      mPlotPseudoliteFragment.updateAntennaToSatPseudorangesTab(
-                          mPseudolitePositioningFromRealTimeEvents.getAntennaToSatPseudorangesMeters(), timeSeconds);
-                      mPlotPseudoliteFragment.updateAntennaToUserPseudorangesTab(
-                          mPseudolitePositioningFromRealTimeEvents.getAntennaToUserPseudorangesMeters(), timeSeconds);
-                      mPlotPseudoliteFragment.updateChangeOfRawPseudorangesTab(
-                          mPseudolitePositioningFromRealTimeEvents.getChangeOfRawPseudorangesMeters(), timeSeconds);
-                      mPlotPseudoliteFragment.updateChangeOfAntennaToSatPseudorangesTab(
-                          mPseudolitePositioningFromRealTimeEvents.getChangeOfAntennaToSatPseudorangesMeters(), timeSeconds);
-                      mPlotPseudoliteFragment.updateChangeOfAntennaToUserPseudorangesTab(
-                          mPseudolitePositioningFromRealTimeEvents.getChangeOfAntennaToUserPseudorangesMeters(), timeSeconds);
-                      mPlotPseudoliteFragment.updateRawPseudorangesRateTab(
-                          mPseudolitePositioningFromRealTimeEvents.getRawPseudorangesRateMps(), timeSeconds);
-                      mPlotPseudoliteFragment.updateAntennaToSatPseudorangesRateTab(
-                          mPseudolitePositioningFromRealTimeEvents.getAntennaToSatPseudorangesRateMps(), timeSeconds);
-                      mPlotPseudoliteFragment.updateAntennaToUserPseudorangesRateTab(
-                          mPseudolitePositioningFromRealTimeEvents.getAntennaToUserPseudorangesRateMps(), timeSeconds);*/
+                      mPlotSimulationFragment.updateCn0DbHzTab(
+                          mPseudolitePositioningFromSimulationEvents.getCn0DbHz(), timeSeconds);
+                      mPlotSimulationFragment.updateRawPseudorangesTab(
+                          mPseudolitePositioningFromSimulationEvents.getRawPseudorangesMeters(), timeSeconds);
+                      mPlotSimulationFragment.updateAntennaToSatPseudorangesTab(
+                          mPseudolitePositioningFromSimulationEvents.getAntennaToSatPseudorangesMeters(), timeSeconds);
+                      mPlotSimulationFragment.updateAntennaToUserPseudorangesTab(
+                          mPseudolitePositioningFromSimulationEvents.getAntennaToUserPseudorangesMeters(), timeSeconds);
+                      mPlotSimulationFragment.updateChangeOfRawPseudorangesTab(
+                          mPseudolitePositioningFromSimulationEvents.getChangeOfRawPseudorangesMeters(), timeSeconds);
+                      mPlotSimulationFragment.updateChangeOfAntennaToSatPseudorangesTab(
+                          mPseudolitePositioningFromSimulationEvents.getChangeOfAntennaToSatPseudorangesMeters(), timeSeconds);
+                      mPlotSimulationFragment.updateChangeOfAntennaToUserPseudorangesTab(
+                          mPseudolitePositioningFromSimulationEvents.getChangeOfAntennaToUserPseudorangesMeters(), timeSeconds);
+                      mPlotSimulationFragment.updateRawPseudorangesRateTab(
+                          mPseudolitePositioningFromSimulationEvents.getRawPseudorangesRateMps(), timeSeconds);
+                      mPlotSimulationFragment.updateAntennaToSatPseudorangesRateTab(
+                          mPseudolitePositioningFromSimulationEvents.getAntennaToSatPseudorangesRateMps(), timeSeconds);
+                      mPlotSimulationFragment.updateAntennaToUserPseudorangesRateTab(
+                          mPseudolitePositioningFromSimulationEvents.getAntennaToUserPseudorangesRateMps(), timeSeconds);
+                      double[] positionXYZ = mPseudolitePositioningFromSimulationEvents.getPseudolitePositioningSolutionXYZ();
+                      mPlotSimulationFragment.updatePositionTab(positionXYZ[0], positionXYZ[1]);
+                      mPlotSimulationFragment.updateHeightTab(positionXYZ[2], timeSeconds);
                     }
                   }
               );

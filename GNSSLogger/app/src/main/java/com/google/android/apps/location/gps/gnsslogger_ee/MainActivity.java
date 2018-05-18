@@ -59,45 +59,35 @@ import com.baidu.mapapi.SDKInitializer;
 
 /** The activity for the application. */
 public class MainActivity extends AppCompatActivity
-    implements OnConnectionFailedListener, ConnectionCallbacks, GroundTruthModeSwitcher {
+    implements OnConnectionFailedListener, ConnectionCallbacks {
   private static final int LOCATION_REQUEST_ID = 1;
   private static final String[] REQUIRED_PERMISSIONS = {
     Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.WRITE_EXTERNAL_STORAGE
   };
-  private static final int NUMBER_OF_FRAGMENTS = 11;
+  private static final int NUMBER_OF_FRAGMENTS = 8;
   private static final int FRAGMENT_INDEX_SETTING = 0;
-  /*private static final int FRAGMENT_INDEX_LOGGER = 1;
-  private static final int FRAGMENT_INDEX_LOGGER_LOCATION = 2;
-  private static final int FRAGMENT_INDEX_LOGGER_MEASUREMENT = 3;
-  private static final int FRAGMENT_INDEX_LOGGER_NAVIGATION = 4;
-  private static final int FRAGMENT_INDEX_LOGGER_GNSSSTATUS = 5;
-  private static final int FRAGMENT_INDEX_LOGGER_NMEA = 6;
-  private static final int FRAGMENT_INDEX_POSITION = 7;
-  private static final int FRAGMENT_INDEX_RESULT = 8;
-  private static final int FRAGMENT_INDEX_PSEUDOLITE = 9;
-  private static final int FRAGMENT_INDEX_TEST = 10;*/
   private static final int FRAGMENT_INDEX_LOGGER = 1;
-  private static final int FRAGMENT_INDEX_LOGGER_LOCATION = 2;
-  private static final int FRAGMENT_INDEX_LOGGER_MEASUREMENT = 3;
-  private static final int FRAGMENT_INDEX_LOGGER_NAVIGATION = 4;
+  //private static final int FRAGMENT_INDEX_LOGGER_LOCATION = 2;
+  //private static final int FRAGMENT_INDEX_LOGGER_MEASUREMENT = 3;
+  //private static final int FRAGMENT_INDEX_LOGGER_NAVIGATION = 4;
   /*private static final int FRAGMENT_INDEX_LOGGER_GNSSSTATUS = 5;
   private static final int FRAGMENT_INDEX_LOGGER_NMEA = 6;*/
-  private static final int FRAGMENT_INDEX_POSITION = 5;
-  private static final int FRAGMENT_INDEX_PSEUDOLITE = 6;
-  private static final int FRAGMENT_INDEX_PLOT = 7;
-  private static final int FRAGMENT_INDEX_MAP = 8;
-  private static final int FRAGMENT_INDEX_PLOT_PSEUDOLITE = 9;
-  private static final int FRAGMENT_INDEX_SIMULATION = 10;
+  private static final int FRAGMENT_INDEX_POSITION = 2;
+  private static final int FRAGMENT_INDEX_PSEUDOLITE = 3;
+  private static final int FRAGMENT_INDEX_PLOT = 4;
+  private static final int FRAGMENT_INDEX_MAP = 5;
+  private static final int FRAGMENT_INDEX_PLOT_PSEUDOLITE = 6;
+  private static final int FRAGMENT_INDEX_SIMULATION = 7;
   private static final String TAG = "MainActivity";
 
   private GnssContainer mGnssContainer;
   private UiLogger mUiLogger;
-  private UiLoggerLocation mUiLoggerLocation;
+/*  private UiLoggerLocation mUiLoggerLocation;
   private UiLoggerMeasurement mUiLoggerMeasurement;
   private UiLoggerNavigation mUiLoggerNavigation;
   private UiLoggerGnssStatus mUiLoggerGnssStatus;
-  private UiLoggerNmea mUiLoggerNmea;
-  private RealTimePositionVelocityCalculator mRealTimePositionVelocityCalculator;
+  private UiLoggerNmea mUiLoggerNmea;*/
+  //private RealTimePositionVelocityCalculator mRealTimePositionVelocityCalculator;
   private PositionCalculator mPositionCalculator;
   private PseudolitePositionCalculator mPseudolitePositionCalculator;
   private SimulationCalculator mSimulationCalculator;
@@ -105,14 +95,14 @@ public class MainActivity extends AppCompatActivity
   private FileLoggerPseudolite mFileLoggerPseudolite;
   private FileLoggerSimulation mFileLoggerSimulation;
   // for test
-  private TestCalculator mTestCalculator;
-  private FileLoggerPseudolite mFileTest;
+  /*private TestCalculator mTestCalculator;
+  private FileLoggerPseudolite mFileTest;*/
 
   private Fragment[] mFragments;
   private GoogleApiClient mGoogleApiClient;
-  private boolean mAutoSwitchGroundTruthMode;
+  /*private boolean mAutoSwitchGroundTruthMode;
   private final ActivityDetectionBroadcastReceiver mBroadcastReceiver =
-      new ActivityDetectionBroadcastReceiver();
+      new ActivityDetectionBroadcastReceiver();*/
 
   @Override
   protected void onStart() {
@@ -122,15 +112,15 @@ public class MainActivity extends AppCompatActivity
   @Override
   protected void onResume() {
     super.onResume();
-    LocalBroadcastManager.getInstance(this)
+    /*LocalBroadcastManager.getInstance(this)
         .registerReceiver(
             mBroadcastReceiver, new IntentFilter(
-                DetectedActivitiesIntentReceiver.AR_RESULT_BROADCAST_ACTION));
+                DetectedActivitiesIntentReceiver.AR_RESULT_BROADCAST_ACTION));*/
   }
 
   @Override
   protected void onPause() {
-    LocalBroadcastManager.getInstance(this).unregisterReceiver(mBroadcastReceiver);
+    //LocalBroadcastManager.getInstance(this).unregisterReceiver(mBroadcastReceiver);
     super.onPause();
   }
 
@@ -216,20 +206,18 @@ public class MainActivity extends AppCompatActivity
           return mFragments[FRAGMENT_INDEX_SETTING];
         case FRAGMENT_INDEX_LOGGER:
           return mFragments[FRAGMENT_INDEX_LOGGER];
-        case FRAGMENT_INDEX_LOGGER_LOCATION:
+        /*case FRAGMENT_INDEX_LOGGER_LOCATION:
           return mFragments[FRAGMENT_INDEX_LOGGER_LOCATION];
         case FRAGMENT_INDEX_LOGGER_MEASUREMENT:
           return mFragments[FRAGMENT_INDEX_LOGGER_MEASUREMENT];
         case FRAGMENT_INDEX_LOGGER_NAVIGATION:
-          return mFragments[FRAGMENT_INDEX_LOGGER_NAVIGATION];
+          return mFragments[FRAGMENT_INDEX_LOGGER_NAVIGATION];*/
         /*case FRAGMENT_INDEX_LOGGER_GNSSSTATUS:
           return mFragments[FRAGMENT_INDEX_LOGGER_GNSSSTATUS];
         case FRAGMENT_INDEX_LOGGER_NMEA:
           return mFragments[FRAGMENT_INDEX_LOGGER_NMEA];*/
         case FRAGMENT_INDEX_POSITION:
           return mFragments[FRAGMENT_INDEX_POSITION];
-        /*case FRAGMENT_INDEX_RESULT:
-          return mFragments[FRAGMENT_INDEX_RESULT];*/
         case FRAGMENT_INDEX_PSEUDOLITE:
           return mFragments[FRAGMENT_INDEX_PSEUDOLITE];
         case FRAGMENT_INDEX_PLOT:
@@ -261,12 +249,12 @@ public class MainActivity extends AppCompatActivity
           return getString(R.string.title_settings).toUpperCase(locale);
         case FRAGMENT_INDEX_LOGGER:
           return getString(R.string.title_log).toUpperCase(locale);
-        case FRAGMENT_INDEX_LOGGER_LOCATION:
+        /*case FRAGMENT_INDEX_LOGGER_LOCATION:
           return getString(R.string.title_log_location).toUpperCase(locale);
         case FRAGMENT_INDEX_LOGGER_MEASUREMENT:
           return getString(R.string.title_log_measurement).toUpperCase(locale);
         case FRAGMENT_INDEX_LOGGER_NAVIGATION:
-          return getString(R.string.title_log_navigation).toUpperCase(locale);
+          return getString(R.string.title_log_navigation).toUpperCase(locale);*/
         /*case FRAGMENT_INDEX_LOGGER_GNSSSTATUS:
           return getString(R.string.title_log_gnssStatus).toUpperCase(locale);
         case FRAGMENT_INDEX_LOGGER_NMEA:
@@ -306,9 +294,9 @@ public class MainActivity extends AppCompatActivity
 
   private void setupFragments() {
     mUiLogger = new UiLogger();
-    mUiLoggerLocation = new UiLoggerLocation();
+    /*mUiLoggerLocation = new UiLoggerLocation();
     mUiLoggerMeasurement = new UiLoggerMeasurement();
-    mUiLoggerNavigation = new UiLoggerNavigation();
+    mUiLoggerNavigation = new UiLoggerNavigation();*/
     /*mUiLoggerGnssStatus = new UiLoggerGnssStatus();
     mUiLoggerNmea = new UiLoggerNmea();*/
 
@@ -344,9 +332,9 @@ public class MainActivity extends AppCompatActivity
         new GnssContainer(
             getApplicationContext(),
             mUiLogger,
-            mUiLoggerLocation,
-            mUiLoggerMeasurement,
-            mUiLoggerNavigation,
+            //mUiLoggerLocation,
+            //mUiLoggerMeasurement,
+            //mUiLoggerNavigation,
             //mUiLoggerGnssStatus,
             //mUiLoggerNmea,
             mFileLogger,
@@ -360,8 +348,8 @@ public class MainActivity extends AppCompatActivity
     mFragments = new Fragment[NUMBER_OF_FRAGMENTS];
     SettingsFragment settingsFragment = new SettingsFragment();
     settingsFragment.setGpsContainer(mGnssContainer);
-    settingsFragment.setRealTimePositionVelocityCalculator(mRealTimePositionVelocityCalculator);
-    settingsFragment.setAutoModeSwitcher(this);
+    //settingsFragment.setRealTimePositionVelocityCalculator(mRealTimePositionVelocityCalculator);
+    //settingsFragment.setAutoModeSwitcher(this);
     mFragments[FRAGMENT_INDEX_SETTING] = settingsFragment;
 
     LoggerFragment loggerFragment = new LoggerFragment();
@@ -369,7 +357,7 @@ public class MainActivity extends AppCompatActivity
     loggerFragment.setFileLogger(mFileLogger);
     mFragments[FRAGMENT_INDEX_LOGGER] = loggerFragment;
 
-    LoggerOneFragment loggerLocationFragment = new LoggerOneFragment();
+    /*LoggerOneFragment loggerLocationFragment = new LoggerOneFragment();
     loggerLocationFragment.setUiLogger(mUiLoggerLocation);
     mFragments[FRAGMENT_INDEX_LOGGER_LOCATION] = loggerLocationFragment;
 
@@ -379,7 +367,7 @@ public class MainActivity extends AppCompatActivity
 
     LoggerOneFragment loggerNavigationFragment = new LoggerOneFragment();
     loggerNavigationFragment.setUiLogger(mUiLoggerNavigation);
-    mFragments[FRAGMENT_INDEX_LOGGER_NAVIGATION] = loggerNavigationFragment;
+    mFragments[FRAGMENT_INDEX_LOGGER_NAVIGATION] = loggerNavigationFragment;*/
 
     /*LoggerOneFragment loggerGnssStatusFragment = new LoggerOneFragment();
     loggerGnssStatusFragment.setUiLogger(mUiLoggerGnssStatus);
@@ -415,6 +403,7 @@ public class MainActivity extends AppCompatActivity
     mPseudolitePositionCalculator.setPlotPseudoliteFragment(mPlotPseudoliteFragment);
 
     SimulationFragment simulationFragment = new SimulationFragment();
+    mSimulationCalculator.setPlotSimulationFragment(mPlotPseudoliteFragment);
     simulationFragment.setSimulationCalculator(mSimulationCalculator);
     simulationFragment.setmFileLoggerSimulation(mFileLoggerSimulation);
     mFragments[FRAGMENT_INDEX_SIMULATION] = simulationFragment;
@@ -462,51 +451,6 @@ public class MainActivity extends AppCompatActivity
       setupFragments();
     } else {
       ActivityCompat.requestPermissions(activity, REQUIRED_PERMISSIONS, LOCATION_REQUEST_ID);
-    }
-  }
-
-  /**
-   * Toggles the flag to allow Activity Recognition updates to change ground truth mode
-   */
-  public void setAutoSwitchGroundTruthModeEnabled(boolean enabled) {
-    mAutoSwitchGroundTruthMode = enabled;
-  }
-
-  /**
-   * A receiver for result of
-   * {@link ActivityRecognition#ActivityRecognitionApi#requestActivityUpdates()} broadcast by {@link
-   * DetectedActivitiesIntentReceiver}
-   */
-  public class ActivityDetectionBroadcastReceiver extends BroadcastReceiver {
-    @Override
-    public void onReceive(Context context, Intent intent) {
-
-      // Modify the status of mRealTimePositionVelocityCalculator only if the status is set to auto
-      // (indicated by mAutoSwitchGroundTruthMode).
-      if (mAutoSwitchGroundTruthMode) {
-        ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
-        setGroundTruthModeOnResult(result);
-      }
-    }
-  }
-
-  /**
-   * Sets up the ground truth mode of {@link RealTimePositionVelocityCalculator} given an result
-   * from Activity Recognition update. For activities other than {@link DetectedActivity#STILL}
-   * and {@link DetectedActivity#TILTING}, we conservatively assume the user is moving and use the
-   * last WLS position solution as ground truth for corrected residual computation.
-   */
-  private void setGroundTruthModeOnResult(ActivityRecognitionResult result){
-    if (result != null){
-      int detectedActivityType = result.getMostProbableActivity().getType();
-      if (detectedActivityType == DetectedActivity.STILL
-          || detectedActivityType == DetectedActivity.TILTING){
-        mRealTimePositionVelocityCalculator.setResidualPlotMode(
-            RealTimePositionVelocityCalculator.RESIDUAL_MODE_STILL, null);
-      } else {
-        mRealTimePositionVelocityCalculator.setResidualPlotMode(
-            RealTimePositionVelocityCalculator.RESIDUAL_MODE_MOVING, null);
-      }
     }
   }
 }
