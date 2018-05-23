@@ -140,9 +140,9 @@ class PseudolitePositioningLeastSquare {
     // Correct the receiver time of week with the estimated receiver clock bias
     //receiverGPSTowAtReceptionSeconds -= positionSolutionECEF[3] / SPEED_OF_LIGHT_MPS;
 
-    double[][] indoorAntennasXyz = pseudoliteMessageStore.getIndoorAntennasXyz();
-    /*{{43.07, 25.91, 26.96},
-        {-102.29, -19.14, 25.98}, {15.09, -69.77, 27.81}, {-48.67, 52.33, 25.98}};*/
+    double[][] indoorAntennasXyz = //pseudoliteMessageStore.getIndoorAntennasXyz();
+    {{-50.0, -50.0, -50.0},
+        {0.0, 50.0, -50.0}, {-50.0, 50.0, 50.0}, {0.0, -50.0, 50.0}};
     int pseudoliteNum = indoorAntennasXyz.length;
 
     double[] outdoorToIndoorRange = pseudoliteMessageStore.getOutdoorToIndoorRange();
@@ -280,6 +280,15 @@ class PseudolitePositioningLeastSquare {
         }
       }
 
+      for (int i = 0; i < pseudoliteNum; ++i) {
+        double[] r = {indoorAntennasXyz[i][0] - positionSolution[0],
+            indoorAntennasXyz[i][1] - positionSolution[1],
+            indoorAntennasXyz[i][2] - positionSolution[2]};
+        // 根据迭代更新的用户位置计算得到迭代的伪卫星到用户的伪距
+        estiPseuoRange[i] = Math.sqrt(Math.pow(r[0], 2) + Math.pow(r[1], 2) + Math.pow(r[2], 2)) + bias;
+        deltaPseuoRange[i] = pseudoliteToUserRange[i] - estiPseuoRange[i];
+      }
+
       RealMatrix GTG = connectionMatrix.transpose().multiply(connectionMatrix);
       RealMatrix temp = GTG.add(new Array2DRowRealMatrix(eye));
       RealMatrix hMatrix = new LUDecomposition(temp).getSolver().getInverse();
@@ -398,8 +407,8 @@ class PseudolitePositioningLeastSquare {
       double biasTemp = bias;
       biasTemp += deltaPosition[3];
 
-      double tempdet = new LUDecomposition(temp).getDeterminant();
-      Log.d("伪卫星最小二乘", "第" + (MAX_NUM_OF_ITERATION - calTimes) + "次迭代--det(temp)=" + tempdet);
+      //double tempdet = new LUDecomposition(temp).getDeterminant();
+      //Log.d("伪卫星最小二乘", "第" + (MAX_NUM_OF_ITERATION - calTimes) + "次迭代--det(temp)=" + tempdet);
 
       // Apply corrections to the position estimate
       double[] positionTemp = new double[4];
@@ -424,11 +433,11 @@ class PseudolitePositioningLeastSquare {
         delta2 += Math.pow(deltaPr, 2);
       }
 
-      double norm = 0.0;
+/*      double norm = 0.0;
       for (double dp : deltaPosition) {
         norm += Math.pow(dp, 2);
       }
-      norm = Math.sqrt(norm);
+      norm = Math.sqrt(norm);*/
 
       Log.d("伪卫星最小二乘", "delta1:" + delta1);
       Log.d("伪卫星最小二乘", "delta2:" + delta2);
@@ -442,7 +451,7 @@ class PseudolitePositioningLeastSquare {
           positionSolution[i] = positionTemp[i];
         }
         delta1 = delta2;
-        error = norm;
+        error = Math.sqrt(Math.pow(deltaPosition[0], 2) + Math.pow(deltaPosition[1], 2) + Math.pow(deltaPosition[2], 2));
         Log.d("伪卫星最小二乘", "第" + (MAX_NUM_OF_ITERATION - calTimes) + "次迭代--position=[" +
             positionSolution[0] + "," + positionSolution[1] + "," + positionSolution[2] + "]");
         Log.d("伪卫星最小二乘", "第" + (MAX_NUM_OF_ITERATION - calTimes) + "次迭代--bias=" + bias);

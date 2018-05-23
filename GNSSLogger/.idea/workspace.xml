@@ -76,46 +76,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="SimulationCalculator.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/app/src/main/java/com/google/android/apps/location/gps/gnsslogger_ee/SimulationCalculator.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="24">
-              <caret line="113" column="36" lean-forward="false" selection-start-line="113" selection-start-column="36" selection-end-line="113" selection-end-column="36" />
-              <folding>
-                <element signature="e#4218#8572#0" expanded="true" />
-                <element signature="e#4863#7398#0" expanded="true" />
-                <element signature="e#7397#7398#0" expanded="true" />
-                <element signature="e#8571#8572#0" expanded="true" />
-                <element signature="e#9364#9365#0" expanded="true" />
-                <element signature="e#9407#9408#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="GnssContainer.java" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/app/src/main/java/com/google/android/apps/location/gps/gnsslogger_ee/GnssContainer.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="48">
-              <caret line="333" column="104" lean-forward="false" selection-start-line="333" selection-start-column="104" selection-end-line="333" selection-end-column="104" />
-              <folding>
-                <element signature="method#registerLocation#0;class#GnssContainer#0" expanded="false" />
-                <element signature="method#registerSingleNetworkLocation#0;class#GnssContainer#0" expanded="false" />
-                <element signature="method#registerSingleGpsLocation#0;class#GnssContainer#0" expanded="false" />
-                <element signature="method#unregisterMeasurements#0;class#GnssContainer#0" expanded="false" />
-                <element signature="method#registerNavigation#0;class#GnssContainer#0" expanded="false" />
-                <element signature="method#registerGnssStatus#0;class#GnssContainer#0" expanded="false" />
-                <element signature="method#unregisterGpsStatus#0;class#GnssContainer#0" expanded="false" />
-                <element signature="method#registerNmea#0;class#GnssContainer#0" expanded="false" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="PlotPseudoliteFragment.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/app/src/main/java/com/google/android/apps/location/gps/gnsslogger_ee/PlotPseudoliteFragment.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="148">
+            <state relative-caret-position="13560">
               <caret line="632" column="62" lean-forward="false" selection-start-line="632" selection-start-column="62" selection-end-line="632" selection-end-column="62" />
               <folding>
                 <element signature="e#20259#20260#0" expanded="true" />
@@ -133,11 +97,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="PseudolitePositioningLeastSquare.java" pinned="false" current-in-tab="false">
+      <file leaf-file-name="PseudolitePositioningLeastSquare.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/pseudorange/src/main/java/com/google/location/lbs/gnss/gps/pseudorange/PseudolitePositioningLeastSquare.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="367">
-              <caret line="69" column="51" lean-forward="false" selection-start-line="69" selection-start-column="51" selection-end-line="69" selection-end-column="51" />
+            <state relative-caret-position="279">
+              <caret line="311" column="45" lean-forward="true" selection-start-line="311" selection-start-column="45" selection-end-line="311" selection-end-column="45" />
               <folding>
                 <element signature="imports" expanded="true" />
                 <element signature="docComment;class#PseudolitePositioningLeastSquare#0" expanded="false" />
@@ -3242,9 +3206,9 @@
         <option value="$PROJECT_DIR$/pseudorange/src/main/java/com/google/location/lbs/gnss/gps/pseudorange/PseudolitePositioningFromSimulationEvents.java" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/google/android/apps/location/gps/gnsslogger_ee/SimulationCalculator.java" />
         <option value="$PROJECT_DIR$/app/src/main/res/values/strings.xml" />
-        <option value="$PROJECT_DIR$/pseudorange/src/main/java/com/google/location/lbs/gnss/gps/pseudorange/PseudolitePositioningLeastSquare.java" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/google/android/apps/location/gps/gnsslogger_ee/PlotPseudoliteFragment.java" />
         <option value="$PROJECT_DIR$/app/src/main/java/com/google/android/apps/location/gps/gnsslogger_ee/GnssContainer.java" />
+        <option value="$PROJECT_DIR$/pseudorange/src/main/java/com/google/location/lbs/gnss/gps/pseudorange/PseudolitePositioningLeastSquare.java" />
       </list>
     </option>
   </component>
@@ -3285,50 +3249,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scratches" />
-      <pane id="AndroidView">
-        <subPane>
-          <expand>
-            <path>
-              <item name="GNSSLogger" type="1abcf292:AndroidViewProjectNode" />
-              <item name="app" type="feadf853:AndroidModuleNode" />
-            </path>
-            <path>
-              <item name="GNSSLogger" type="1abcf292:AndroidViewProjectNode" />
-              <item name="app" type="feadf853:AndroidModuleNode" />
-              <item name="java" type="edd41e36:AndroidSourceTypeNode" />
-            </path>
-            <path>
-              <item name="GNSSLogger" type="1abcf292:AndroidViewProjectNode" />
-              <item name="Gradle Scripts" type="ae0cef3a:AndroidBuildScriptsGroupNode" />
-            </path>
-          </expand>
-          <select />
-        </subPane>
-      </pane>
-      <pane id="PackagesPane">
-        <subPane>
-          <expand>
-            <path>
-              <item name="GNSSLogger" type="58d84e3e:PackageViewProjectNode" />
-              <item name="app" type="616d4139:PackageViewModuleNode" />
-            </path>
-            <path>
-              <item name="GNSSLogger" type="58d84e3e:PackageViewProjectNode" />
-              <item name="app" type="616d4139:PackageViewModuleNode" />
-              <item name="com.google" type="1f31426a:PackageElementNode" />
-            </path>
-            <path>
-              <item name="GNSSLogger" type="58d84e3e:PackageViewProjectNode" />
-              <item name="app" type="616d4139:PackageViewModuleNode" />
-              <item name="com.google" type="1f31426a:PackageElementNode" />
-              <item name="android" type="1f31426a:PackageElementNode" />
-            </path>
-          </expand>
-          <select />
-        </subPane>
-      </pane>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -3454,6 +3374,50 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
+      <pane id="PackagesPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="GNSSLogger" type="58d84e3e:PackageViewProjectNode" />
+              <item name="app" type="616d4139:PackageViewModuleNode" />
+            </path>
+            <path>
+              <item name="GNSSLogger" type="58d84e3e:PackageViewProjectNode" />
+              <item name="app" type="616d4139:PackageViewModuleNode" />
+              <item name="com.google" type="1f31426a:PackageElementNode" />
+            </path>
+            <path>
+              <item name="GNSSLogger" type="58d84e3e:PackageViewProjectNode" />
+              <item name="app" type="616d4139:PackageViewModuleNode" />
+              <item name="com.google" type="1f31426a:PackageElementNode" />
+              <item name="android" type="1f31426a:PackageElementNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+      <pane id="AndroidView">
+        <subPane>
+          <expand>
+            <path>
+              <item name="GNSSLogger" type="1abcf292:AndroidViewProjectNode" />
+              <item name="app" type="feadf853:AndroidModuleNode" />
+            </path>
+            <path>
+              <item name="GNSSLogger" type="1abcf292:AndroidViewProjectNode" />
+              <item name="app" type="feadf853:AndroidModuleNode" />
+              <item name="java" type="edd41e36:AndroidSourceTypeNode" />
+            </path>
+            <path>
+              <item name="GNSSLogger" type="1abcf292:AndroidViewProjectNode" />
+              <item name="Gradle Scripts" type="ae0cef3a:AndroidBuildScriptsGroupNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -3681,8 +3645,8 @@
       <window_info id="Image Layers" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Build Variants" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Capture Analysis" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.37411764" sideWeight="0.23122318" order="8" side_tool="true" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.37411764" sideWeight="0.76877683" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.37411764" sideWeight="0.23444206" order="8" side_tool="true" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.37411764" sideWeight="0.76555794" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="false" weight="0.33" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3282353" sideWeight="0.472103" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Logcat" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.42588234" sideWeight="0.39806867" order="12" side_tool="false" content_ui="tabs" />
@@ -3690,7 +3654,7 @@
       <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.24785408" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Build" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2882353" sideWeight="0.36856222" order="11" side_tool="false" content_ui="tabs" />
+      <window_info id="Build" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2882353" sideWeight="0.36695278" order="11" side_tool="false" content_ui="tabs" />
       <window_info id="Gradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Device File Explorer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="true" content_ui="tabs" />
@@ -4073,6 +4037,68 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/res/values/strings.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="302">
+          <caret line="92" column="53" lean-forward="false" selection-start-line="92" selection-start-column="53" selection-end-line="92" selection-end-column="53" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/google/android/apps/location/gps/gnsslogger_ee/PlotPseudoliteFragment.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="13560">
+          <caret line="632" column="62" lean-forward="false" selection-start-line="632" selection-start-column="62" selection-end-line="632" selection-end-column="62" />
+          <folding>
+            <element signature="e#20259#20260#0" expanded="true" />
+            <element signature="e#20280#20281#0" expanded="true" />
+            <element signature="e#21966#21967#0" expanded="true" />
+            <element signature="e#22005#22006#0" expanded="true" />
+            <element signature="e#23945#23946#0" expanded="true" />
+            <element signature="e#24004#24005#0" expanded="true" />
+            <element signature="e#26074#26075#0" expanded="true" />
+            <element signature="e#26114#26115#0" expanded="true" />
+            <element signature="e#26177#26178#0" expanded="true" />
+            <element signature="e#26218#26219#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/res/raw/gnss_log_2018_05_09_15_47_23.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-112266">
+          <caret line="12" column="25" lean-forward="false" selection-start-line="12" selection-start-column="12" selection-end-line="12" selection-end-column="25" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/google/android/apps/location/gps/gnsslogger_ee/GnssContainer.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="168">
+          <caret line="338" column="25" lean-forward="true" selection-start-line="338" selection-start-column="25" selection-end-line="338" selection-end-column="25" />
+          <folding>
+            <element signature="method#registerLocation#0;class#GnssContainer#0" expanded="false" />
+            <element signature="method#registerSingleNetworkLocation#0;class#GnssContainer#0" expanded="false" />
+            <element signature="method#registerSingleGpsLocation#0;class#GnssContainer#0" expanded="false" />
+            <element signature="method#unregisterMeasurements#0;class#GnssContainer#0" expanded="false" />
+            <element signature="method#registerNavigation#0;class#GnssContainer#0" expanded="false" />
+            <element signature="method#registerGnssStatus#0;class#GnssContainer#0" expanded="false" />
+            <element signature="method#unregisterGpsStatus#0;class#GnssContainer#0" expanded="false" />
+            <element signature="method#registerNmea#0;class#GnssContainer#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/google/android/apps/location/gps/gnsslogger_ee/SimulationCalculator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="24">
+          <caret line="113" column="36" lean-forward="false" selection-start-line="113" selection-start-column="36" selection-end-line="113" selection-end-column="36" />
+          <folding>
+            <element signature="e#9364#9365#0" expanded="false" />
+            <element signature="e#9407#9408#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/pseudorange/src/main/java/com/google/location/lbs/gnss/gps/pseudorange/PseudolitePositioningFromSimulationEvents.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="24">
@@ -4099,18 +4125,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/res/values/strings.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="302">
-          <caret line="92" column="53" lean-forward="false" selection-start-line="92" selection-start-column="53" selection-end-line="92" selection-end-column="53" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/pseudorange/src/main/java/com/google/location/lbs/gnss/gps/pseudorange/PseudolitePositioningLeastSquare.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="367">
-          <caret line="69" column="51" lean-forward="false" selection-start-line="69" selection-start-column="51" selection-end-line="69" selection-end-column="51" />
+        <state relative-caret-position="279">
+          <caret line="311" column="45" lean-forward="true" selection-start-line="311" selection-start-column="45" selection-end-line="311" selection-end-column="45" />
           <folding>
             <element signature="imports" expanded="true" />
             <element signature="docComment;class#PseudolitePositioningLeastSquare#0" expanded="false" />
@@ -4147,65 +4165,6 @@
             <element signature="docComment;field#weekNumber#0;class#GpsTimeOfWeekAndWeekNumber#0;class#PseudolitePositioningLeastSquare#0" expanded="false" />
             <element signature="docComment;method#GpsTimeOfWeekAndWeekNumber#0;class#GpsTimeOfWeekAndWeekNumber#0;class#PseudolitePositioningLeastSquare#0" expanded="false" />
             <element signature="docComment;method#computePseudorangeAndUncertainties#0;class#PseudolitePositioningLeastSquare#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/google/android/apps/location/gps/gnsslogger_ee/PlotPseudoliteFragment.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="148">
-          <caret line="632" column="62" lean-forward="false" selection-start-line="632" selection-start-column="62" selection-end-line="632" selection-end-column="62" />
-          <folding>
-            <element signature="e#20259#20260#0" expanded="true" />
-            <element signature="e#20280#20281#0" expanded="true" />
-            <element signature="e#21966#21967#0" expanded="true" />
-            <element signature="e#22005#22006#0" expanded="true" />
-            <element signature="e#23945#23946#0" expanded="true" />
-            <element signature="e#24004#24005#0" expanded="true" />
-            <element signature="e#26074#26075#0" expanded="true" />
-            <element signature="e#26114#26115#0" expanded="true" />
-            <element signature="e#26177#26178#0" expanded="true" />
-            <element signature="e#26218#26219#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/google/android/apps/location/gps/gnsslogger_ee/SimulationCalculator.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="24">
-          <caret line="113" column="36" lean-forward="false" selection-start-line="113" selection-start-column="36" selection-end-line="113" selection-end-column="36" />
-          <folding>
-            <element signature="e#4218#8572#0" expanded="true" />
-            <element signature="e#4863#7398#0" expanded="true" />
-            <element signature="e#7397#7398#0" expanded="true" />
-            <element signature="e#8571#8572#0" expanded="true" />
-            <element signature="e#9364#9365#0" expanded="true" />
-            <element signature="e#9407#9408#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/res/raw/gnss_log_2018_05_09_15_47_23.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-112266">
-          <caret line="12" column="25" lean-forward="false" selection-start-line="12" selection-start-column="12" selection-end-line="12" selection-end-column="25" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/app/src/main/java/com/google/android/apps/location/gps/gnsslogger_ee/GnssContainer.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="48">
-          <caret line="333" column="104" lean-forward="false" selection-start-line="333" selection-start-column="104" selection-end-line="333" selection-end-column="104" />
-          <folding>
-            <element signature="method#registerLocation#0;class#GnssContainer#0" expanded="false" />
-            <element signature="method#registerSingleNetworkLocation#0;class#GnssContainer#0" expanded="false" />
-            <element signature="method#registerSingleGpsLocation#0;class#GnssContainer#0" expanded="false" />
-            <element signature="method#unregisterMeasurements#0;class#GnssContainer#0" expanded="false" />
-            <element signature="method#registerNavigation#0;class#GnssContainer#0" expanded="false" />
-            <element signature="method#registerGnssStatus#0;class#GnssContainer#0" expanded="false" />
-            <element signature="method#unregisterGpsStatus#0;class#GnssContainer#0" expanded="false" />
-            <element signature="method#registerNmea#0;class#GnssContainer#0" expanded="false" />
           </folding>
         </state>
       </provider>
