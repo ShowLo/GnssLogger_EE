@@ -122,10 +122,17 @@ class PseudolitePositioningLeastSquare {
             receiverGPSTowAtReceptionSeconds, receiverGPSWeek, dayOfYear1To366, positionSolutionECEF);
     double[][] satellitesPositionECEFMeters = satPosPseudorangeResAndCovMatrix.satellitesPositionsMeters;
     int[] satellitePRNs = satPosPseudorangeResAndCovMatrix.satellitePRNs;
+    for(int i = 0; i < 4; ++i){
+      System.out.println("卫星"+satellitePRNs[i]);
+        System.out.println(satellitesPositionECEFMeters[i][0]+"\t"+
+            satellitesPositionECEFMeters[i][1]+"\t"+satellitesPositionECEFMeters[i][2]);
+
+    }
     double[] outdoorAntennaLla = pseudoliteMessageStore.getOutdoorAntennaLla();
     double[] outdoorAntennaECEF = Lla2EcefConverter.convertFromLlaToEcefMeters(
         new GeodeticLlaValues(Math.toRadians(outdoorAntennaLla[0]),
             Math.toRadians(outdoorAntennaLla[1]), outdoorAntennaLla[2]));
+    System.out.println("室外天线:"+outdoorAntennaECEF[0]+"\t"+outdoorAntennaECEF[1]+"\t"+outdoorAntennaECEF[2]);
     /*// 先用解出来的位置上方作为室外天线位置来测试
     double[] outdoorAntennaECEF = Lla2EcefConverter.convertFromLlaToEcefMeters(
         new GeodeticLlaValues(Math.toRadians(positionSolutionECEF[0]),
@@ -250,7 +257,7 @@ class PseudolitePositioningLeastSquare {
           indoorAntennasXyz[satsCounter][1] - simulationPos[1],
           indoorAntennasXyz[satsCounter][2] - simulationPos[2]};
       pseudoliteToUserRange[satsCounter] = Math.sqrt(Math.pow(r[0],2)+
-          Math.pow(r[1],2)+Math.pow(r[2],2)) + random.nextGaussian() / 10;
+          Math.pow(r[1],2)+Math.pow(r[2],2)) + 10 + random.nextGaussian();
 
       // 伪距残差
       deltaPseuoRange[satsCounter] = pseudoliteToUserRange[satsCounter] - estiPseuoRange[satsCounter];
@@ -395,7 +402,7 @@ class PseudolitePositioningLeastSquare {
       RealMatrix temp = GTG.add(new Array2DRowRealMatrix(eye));
       // 判断是否可逆
       LUDecomposition tempLUD = new LUDecomposition(temp);
-      if (tempLUD.getDeterminant() < DOUBLE_ROUND_OFF_TOLERANCE) {
+      if (tempLUD.getDeterminant() <= DOUBLE_ROUND_OFF_TOLERANCE) {
         System.err.println("矩阵不可逆");
         calTimes = -1;
         break;
@@ -451,7 +458,12 @@ class PseudolitePositioningLeastSquare {
           positionSolution[i] = positionTemp[i];
         }
         delta1 = delta2;
-        error = Math.sqrt(Math.pow(deltaPosition[0], 2) + Math.pow(deltaPosition[1], 2) + Math.pow(deltaPosition[2], 2));
+        //error = Math.sqrt(Math.pow(deltaPosition[0], 2) + Math.pow(deltaPosition[1], 2) + Math.pow(deltaPosition[2], 2));
+        error = 0.0;
+        for (double dp : deltaPosition) {
+          error += Math.pow(dp, 2);
+        }
+        error = Math.sqrt(error);
         Log.d("伪卫星最小二乘", "第" + (MAX_NUM_OF_ITERATION - calTimes) + "次迭代--position=[" +
             positionSolution[0] + "," + positionSolution[1] + "," + positionSolution[2] + "]");
         Log.d("伪卫星最小二乘", "第" + (MAX_NUM_OF_ITERATION - calTimes) + "次迭代--bias=" + bias);
