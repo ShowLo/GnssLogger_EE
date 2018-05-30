@@ -479,14 +479,12 @@ public class PseudolitePositioningFromSimulationEvents {
   protected GpsNavMessageProto getEph() {
     GpsNavMessageProto eph = new GpsNavMessageProto();
     String line;
-    int satelliteNum = 7;
-    int satelliteCount = 0;
 
     ArrayList<GpsEphemerisProto> gpsEphemerisProtoList = new ArrayList<>();
 
     int i = 0;
 
-    while (satelliteCount < satelliteNum) {
+    while (i < ephFile.length) {
       line = ephFile[i++];
       GpsEphemerisProto gpsEphemerisProtoObj = new GpsEphemerisProto();
       int prn = Integer.parseInt(line.substring(0, 2).trim());
@@ -581,7 +579,6 @@ public class PseudolitePositioningFromSimulationEvents {
       gpsEphemerisProtoObj.fitInterval = fitInterval;
 
       gpsEphemerisProtoList.add(gpsEphemerisProtoObj);
-      ++satelliteCount;
 
     }
 

@@ -331,7 +331,7 @@ public class GnssContainer {
   }
 
   public void startSimulation() {
-    InputStream inputStream = mContext.getResources().openRawResource(R.raw.gnss_log_2018_05_09_15_47_23);
+    InputStream inputStream = mContext.getResources().openRawResource(R.raw.gnss_log_2018_05_09_16_46_27);
     InputStreamReader in = new InputStreamReader(inputStream);
     bufferedReader = new BufferedReader(in);
     new Thread() {
@@ -345,7 +345,6 @@ public class GnssContainer {
           }
           while (bufferedReader != null && line != null) {
             if (line.substring(0, 1).contains("R")) {
-              System.out.println(line);
               String[] datas = line.split(",", -1);
               SimulationGpsMeasurementsEvent gpsMeasurementsEvent = new SimulationGpsMeasurementsEvent();
               SimulationGpsClock gpsClock = new SimulationGpsClock();
@@ -479,7 +478,7 @@ public class GnssContainer {
                   gpsMeasurementsEvent
               );
 
-              Thread.sleep(5000);
+              Thread.sleep(2000);
             } else {
               line = bufferedReader.readLine();
             }

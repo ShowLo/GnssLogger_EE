@@ -399,14 +399,10 @@ public class PlotPseudoliteFragment extends Fragment {
    * @param height the height of the pseudolite positioning result in meters
    * @param timeInSeconds the time at which measurements are received
    */
+  private int epoch = 0;
   protected void updateHeightTab(double height, double timeInSeconds) {
-    if (mInitialTimeSeconds < 0) {
-      mInitialTimeSeconds = timeInSeconds;
-    }
-    mLastTimeReceivedSeconds = timeInSeconds - mInitialTimeSeconds;
-
     if (!Double.isNaN(height)) {
-      mPositionManager.addValue(mLastTimeReceivedSeconds, height, HEIGHT_TAB - POSITION_TAB);
+      mPositionManager.addValue(epoch++, height, HEIGHT_TAB - POSITION_TAB);
       if (height < minYAndMaxY[HEIGHT_TAB][0]) {
         minYAndMaxY[HEIGHT_TAB][0] = height;
       }
@@ -420,11 +416,9 @@ public class PlotPseudoliteFragment extends Fragment {
       mCurrentRenderer.setYAxisMax(minYAndMaxY[HEIGHT_TAB][1] + extraSpaceY);
     }
 
-    // Checks if the plot has reached the end of frame and resize
-    if (mLastTimeReceivedSeconds > mCurrentRenderer.getXAxisMax()) {
-      mCurrentRenderer.setXAxisMax(mLastTimeReceivedSeconds);
-      mCurrentRenderer.setXAxisMin(mLastTimeReceivedSeconds - TIME_INTERVAL_SECONDS);
-    }
+    mCurrentRenderer.setXAxisMax(epoch);
+    //mCurrentRenderer.setXAxisMin(mLastTimeReceivedSeconds - TIME_INTERVAL_SECONDS);
+
 
     mChartView.invalidate();
   }

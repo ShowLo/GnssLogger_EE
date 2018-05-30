@@ -65,7 +65,7 @@ class PseudolitePositioningLeastSquare {
   /** Average signal travel time from GPS satellite and earth */
   private static final double AVERAGE_TRAVEL_TIME_SECONDS = 70.0e-3;
   private static final double SECONDS_PER_NANO = 1.0e-9;
-  private static final double DOUBLE_ROUND_OFF_TOLERANCE = 0.0000000001;
+  private static final double DOUBLE_ROUND_OFF_TOLERANCE = 1.0e-5;
 
   private static final int MAX_NUM_OF_ITERATION = 100;
 
@@ -121,18 +121,46 @@ class PseudolitePositioningLeastSquare {
         calculateUserPositionLeastSquare(navMessageProto, usefulSatellitesToReceiverMeasurements,
             receiverGPSTowAtReceptionSeconds, receiverGPSWeek, dayOfYear1To366, positionSolutionECEF);
     double[][] satellitesPositionECEFMeters = satPosPseudorangeResAndCovMatrix.satellitesPositionsMeters;
-    int[] satellitePRNs = satPosPseudorangeResAndCovMatrix.satellitePRNs;
-    for(int i = 0; i < 4; ++i){
-      System.out.println("卫星"+satellitePRNs[i]);
-        System.out.println(satellitesPositionECEFMeters[i][0]+"\t"+
-            satellitesPositionECEFMeters[i][1]+"\t"+satellitesPositionECEFMeters[i][2]);
 
-    }
+    double[][] indoorAntennasXyzRaw = pseudoliteMessageStore.getIndoorAntennasXyz();
+    /*{{-50.0, -50.0, -50.0},
+        {0.0, 50.0, -50.0}, {-50.0, 50.0, 50.0}, {0.0, -50.0, 50.0}};*/
+    int pseudoliteNum = indoorAntennasXyzRaw.length;
+    double[][] indoorAntennasXyz = new double[pseudoliteNum][3];
+
+    int[] satellitePRNs = satPosPseudorangeResAndCovMatrix.satellitePRNs;
     double[] outdoorAntennaLla = pseudoliteMessageStore.getOutdoorAntennaLla();
     double[] outdoorAntennaECEF = Lla2EcefConverter.convertFromLlaToEcefMeters(
         new GeodeticLlaValues(Math.toRadians(outdoorAntennaLla[0]),
             Math.toRadians(outdoorAntennaLla[1]), outdoorAntennaLla[2]));
-    System.out.println("室外天线:"+outdoorAntennaECEF[0]+"\t"+outdoorAntennaECEF[1]+"\t"+outdoorAntennaECEF[2]);
+    int[] satelliteId = pseudoliteMessageStore.getSatelliteId();
+    double[] outdoorToIndoorRangeRaw = pseudoliteMessageStore.getOutdoorToIndoorRange();
+    double[] outdoorToIndoorRange = new double[pseudoliteNum];
+    double[] channelDelayRaw = pseudoliteMessageStore.getChannelDelay();
+    double[] channelDealy = new double[pseudoliteNum];
+    int index = -1;
+    // 重新按照卫星id从小到大的顺序排列
+    for(int i = 0; i < pseudoliteNum; ++i){
+      boolean hasFind = false;
+      for(int j = 0; j < pseudoliteNum; ++j) {
+        if (satellitePRNs[i] == satelliteId[j]) {
+          index = j;
+          hasFind = true;
+        }
+      }
+      if (!hasFind) {
+        Log.d("error", "实际收到的伪卫星信号与提供的伪卫星信息不符合");
+        return;
+      }
+      System.out.println("第" + i + "个对应" + index);
+      indoorAntennasXyz[i] = indoorAntennasXyzRaw[index];
+      outdoorToIndoorRange[i] = outdoorToIndoorRangeRaw[index];
+      channelDealy[i] = channelDelayRaw[index];
+      /*System.out.println("卫星"+satellitePRNs[i]);
+        System.out.println(satellitesPositionECEFMeters[i][0]+"\t"+
+            satellitesPositionECEFMeters[i][1]+"\t"+satellitesPositionECEFMeters[i][2]);*/
+    }
+    //System.out.println("室外天线:"+outdoorAntennaECEF[0]+"\t"+outdoorAntennaECEF[1]+"\t"+outdoorAntennaECEF[2]);
     /*// 先用解出来的位置上方作为室外天线位置来测试
     double[] outdoorAntennaECEF = Lla2EcefConverter.convertFromLlaToEcefMeters(
         new GeodeticLlaValues(Math.toRadians(positionSolutionECEF[0]),
@@ -147,12 +175,6 @@ class PseudolitePositioningLeastSquare {
     // Correct the receiver time of week with the estimated receiver clock bias
     //receiverGPSTowAtReceptionSeconds -= positionSolutionECEF[3] / SPEED_OF_LIGHT_MPS;
 
-    double[][] indoorAntennasXyz = //pseudoliteMessageStore.getIndoorAntennasXyz();
-    {{-50.0, -50.0, -50.0},
-        {0.0, 50.0, -50.0}, {-50.0, 50.0, 50.0}, {0.0, -50.0, 50.0}};
-    int pseudoliteNum = indoorAntennasXyz.length;
-
-    double[] outdoorToIndoorRange = pseudoliteMessageStore.getOutdoorToIndoorRange();
 
     double[] pseudoliteToUserRange = new double[pseudoliteNum];
     double minValue = Double.MAX_VALUE;
@@ -207,7 +229,7 @@ class PseudolitePositioningLeastSquare {
 
       // 室内转发天线到用户距离
       pseudoliteToUserRange[satsCounter] = pseudorangeMeasurementMeters - satelliteToOutdoorAntennaPseudorange -
-          outdoorToIndoorRange[satsCounter];
+          outdoorToIndoorRange[satsCounter] - channelDealy[satsCounter];
 
       // for visualization
       mAntennaToUserPseudorangesMeters[satellitePRNs[satsCounter] - 1] = pseudoliteToUserRange[satsCounter];
@@ -245,19 +267,19 @@ class PseudolitePositioningLeastSquare {
       //    " deltaPseuoRange["+i+"]:"+deltaPseuoRange[i]);
     }
 
-    Random random = new Random();
-    double[] simulationPos = {1.0, 1.0, 0.0};
+    /*Random random = new Random();
+    double[] simulationPos = {1.0, 1.0, 0.0};*/
     for (int satsCounter = 0; satsCounter < pseudoliteNum; ++satsCounter) {
 
       // "归一化"处理
       //pseudoliteToUserRange[satsCounter] -= (minValue - minPseuorange);
 
       // 仿真用，假设用户在（1，1，0），同时叠加高斯噪声
-      double[] r = {indoorAntennasXyz[satsCounter][0] - simulationPos[0],
+      /*double[] r = {indoorAntennasXyz[satsCounter][0] - simulationPos[0],
           indoorAntennasXyz[satsCounter][1] - simulationPos[1],
           indoorAntennasXyz[satsCounter][2] - simulationPos[2]};
       pseudoliteToUserRange[satsCounter] = Math.sqrt(Math.pow(r[0],2)+
-          Math.pow(r[1],2)+Math.pow(r[2],2)) + 10 + random.nextGaussian();
+          Math.pow(r[1],2)+Math.pow(r[2],2)) + 10 + random.nextGaussian();*/
 
       // 伪距残差
       deltaPseuoRange[satsCounter] = pseudoliteToUserRange[satsCounter] - estiPseuoRange[satsCounter];
@@ -272,95 +294,7 @@ class PseudolitePositioningLeastSquare {
       delta1 += Math.pow(deltaPr, 2);
     }
 
-/*    while (error >= LEAST_SQUARE_PSEUDOLITE_POSITIONING_METERS && calTimes > 0) {
-      RealMatrix connectionMatrix = new Array2DRowRealMatrix(calculateGeometryMatrix(
-          indoorAntennasXyz, positionSolution));
-      double[][] eye = new double[4][4];
-      for (int row = 0; row < 4; ++row) {
-        for (int col = 0; col < 4; ++col) {
-          if (row == col) {
-            eye[row][col] = lambda;
-          }
-          else {
-            eye[row][col] = 0;
-          }
-        }
-      }
-
-      for (int i = 0; i < pseudoliteNum; ++i) {
-        double[] r = {indoorAntennasXyz[i][0] - positionSolution[0],
-            indoorAntennasXyz[i][1] - positionSolution[1],
-            indoorAntennasXyz[i][2] - positionSolution[2]};
-        // 根据迭代更新的用户位置计算得到迭代的伪卫星到用户的伪距
-        estiPseuoRange[i] = Math.sqrt(Math.pow(r[0], 2) + Math.pow(r[1], 2) + Math.pow(r[2], 2)) + bias;
-        deltaPseuoRange[i] = pseudoliteToUserRange[i] - estiPseuoRange[i];
-      }
-
-      RealMatrix GTG = connectionMatrix.transpose().multiply(connectionMatrix);
-      RealMatrix temp = GTG.add(new Array2DRowRealMatrix(eye));
-      RealMatrix hMatrix = new LUDecomposition(temp).getSolver().getInverse();
-      RealMatrix buffConnectionMatrix = hMatrix.multiply(connectionMatrix.transpose());
-      deltaPosition = GpsMathOperations.matrixByColVectMultiplication(buffConnectionMatrix.getData(),
-          deltaPseuoRange);
-      bias += deltaPosition[3];
-      Log.d("伪卫星最小二乘", "第"+(100-calTimes)+"次迭代--bias="+bias);
-
-      double[][] t = temp.getData();
-      Log.d("伪卫星最小二乘", "第"+(100-calTimes)+"次迭代--temp="+t[0][0]+","
-          +t[0][1]+","+t[0][2]+","+t[0][3]+"\n"+t[1][0]+","+t[1][1]+","+t[1][2]+","+t[1][3]+"\n"
-          +t[2][0]+","+t[2][1]+","+t[2][2]+","+t[2][3]+"\n"+t[3][0]+","+t[3][1]+","+t[3][2]+","+t[3][3]);
-
-      double tempdet = new LUDecomposition(temp).getDeterminant();
-      Log.d("伪卫星最小二乘", "第"+(100-calTimes)+"次迭代--det(temp)="+tempdet);
-
-      // Apply corrections to the position estimate
-      positionSolution[0] += deltaPosition[0];
-      positionSolution[1] += deltaPosition[1];
-      positionSolution[2] += deltaPosition[2];
-      positionSolution[3] += deltaPosition[3];
-
-      Log.d("伪卫星最小二乘", "第"+(100-calTimes)+"次迭代--deltaPosition="+deltaPosition[0]
-      +","+deltaPosition[1]+","+deltaPosition[2]+","+deltaPosition[3]);
-
-      for (int i = 0; i < pseudoliteNum; ++i) {
-        double[] r = {indoorAntennasXyz[i][0] - positionSolution[0],
-            indoorAntennasXyz[i][1] - positionSolution[1],
-            indoorAntennasXyz[i][2] - positionSolution[2]};
-        estiPseuoRange[i] = Math.sqrt(Math.pow(r[0], 2) + Math.pow(r[1], 2) + Math.pow(r[2], 2)) + bias;
-        deltaPseuoRange[i] = pseudoliteToUserRange[i] - estiPseuoRange[i];
-        Log.d("伪卫星最小二乘", "estiPseudoRange["+i+"]:"+estiPseuoRange[i]);
-        Log.d("伪卫星最小二乘", "deltaPseuoRange["+i+"]:"+deltaPseuoRange[i]);
-      }
-      double delta2 = 0.0;
-      for (double deltaPr : deltaPseuoRange) {
-        delta2 += Math.pow(deltaPr, 2);
-      }
-
-      double norm = 0.0;
-      for (double dp : deltaPosition) {
-        norm += Math.pow(dp, 2);
-      }
-      norm = Math.sqrt(norm);
-
-      Log.d("伪卫星最小二乘", "delta1:"+delta1);
-      Log.d("伪卫星最小二乘", "delta2:"+delta2);
-      Log.d("伪卫星最小二乘", "norm:"+norm);
-
-      if (delta1 > delta2) {
-
-        lambda = lambda / (1 + norm);
-      } else {
-        lambda = lambda + (delta2 - delta1) / (1 + norm);
-      }
-      delta1 = delta2;
-
-      Log.d("伪卫星最小二乘", "lambda:"+lambda);
-
-      error = norm;
-      Log.d("伪卫星最小二乘", "第"+(100-calTimes)+"次迭代--error="+error);
-      --calTimes;
-    }*/
-
+    // LM/阻尼最小二乘
     RealMatrix connectionMatrix = new Array2DRowRealMatrix(calculateGeometryMatrix(
         indoorAntennasXyz, positionSolution));
     RealMatrix GTG = connectionMatrix.transpose().multiply(connectionMatrix);
@@ -402,6 +336,7 @@ class PseudolitePositioningLeastSquare {
       RealMatrix temp = GTG.add(new Array2DRowRealMatrix(eye));
       // 判断是否可逆
       LUDecomposition tempLUD = new LUDecomposition(temp);
+      Log.d("det", "det of GTG + lambda is" + tempLUD.getDeterminant());
       if (tempLUD.getDeterminant() <= DOUBLE_ROUND_OFF_TOLERANCE) {
         System.err.println("矩阵不可逆");
         calTimes = -1;
@@ -440,12 +375,6 @@ class PseudolitePositioningLeastSquare {
         delta2 += Math.pow(deltaPr, 2);
       }
 
-/*      double norm = 0.0;
-      for (double dp : deltaPosition) {
-        norm += Math.pow(dp, 2);
-      }
-      norm = Math.sqrt(norm);*/
-
       Log.d("伪卫星最小二乘", "delta1:" + delta1);
       Log.d("伪卫星最小二乘", "delta2:" + delta2);
       //Log.d("伪卫星最小二乘", "norm:" + norm);
@@ -469,10 +398,6 @@ class PseudolitePositioningLeastSquare {
         Log.d("伪卫星最小二乘", "第" + (MAX_NUM_OF_ITERATION - calTimes) + "次迭代--bias=" + bias);
         Log.d("伪卫星最小二乘", "第" + (MAX_NUM_OF_ITERATION - calTimes) + "次迭代--error=" + error);
       } else {
-        /*if (norm < LEAST_SQUARE_PSEUDOLITE_POSITIONING_METERS) {
-          System.out.println("迭代结束。。。");
-          break;
-        }*/
         lambda *= miu;
       }
       Log.d("伪卫星最小二乘", "第" + (MAX_NUM_OF_ITERATION - calTimes) + "次迭代--lambda:" + lambda);
@@ -480,18 +405,21 @@ class PseudolitePositioningLeastSquare {
       System.out.print(calTimes+":\t");
       System.out.println(error);
     }
+
+    // 普通最小二乘
     /*while (error >= LEAST_SQUARE_TOLERANCE_METERS && calTimes > 0) {
       RealMatrix connectionMatrix = new Array2DRowRealMatrix(calculateGeometryMatrix(
           indoorAntennasXyz, positionSolution));
 
       RealMatrix GTG = connectionMatrix.transpose().multiply(connectionMatrix);
 
-      double[][] t = GTG.getData();
-      Log.d("伪卫星最小二乘", "第"+(100-calTimes)+"次迭代--GTG="+t[0][0]+","
-          +t[0][1]+","+t[0][2]+","+t[0][3]+"\n"+t[1][0]+","+t[1][1]+","+t[1][2]+","+t[1][3]+"\n"
-          +t[2][0]+","+t[2][1]+","+t[2][2]+","+t[2][3]+"\n"+t[3][0]+","+t[3][1]+","+t[3][2]+","+t[3][3]);
       double tempdet = new LUDecomposition(GTG).getDeterminant();
-      Log.d("伪卫星最小二乘", "第"+(100-calTimes)+"次迭代--det(GTG)="+tempdet);
+      //Log.d("伪卫星最小二乘", "第"+(MAX_NUM_OF_ITERATION-calTimes)+"次迭代--det(GTG)="+tempdet);
+      if (tempdet <= DOUBLE_ROUND_OFF_TOLERANCE) {
+        System.err.println("矩阵不可逆");
+        calTimes = -1;
+        break;
+      }
 
       RealMatrix hMatrix = new LUDecomposition(GTG).getSolver().getInverse();
       RealMatrix buffConnectionMatrix = hMatrix.multiply(connectionMatrix.transpose());
@@ -521,11 +449,14 @@ class PseudolitePositioningLeastSquare {
       Log.d("伪卫星最小二乘", "第"+(100-calTimes)+"次迭代--error="+error);
       --calTimes;
     }*/
-    /*RealMatrix covarianceMatrixM2 =
+
+
+/*    RealMatrix covarianceMatrixM2 =
         new Array2DRowRealMatrix(satPosPseudorangeResAndCovMatrix.covarianceMatrixMetersSquare);
     LUDecomposition ludCovMatrixM2 = new LUDecomposition(covarianceMatrixM2);
     double det = ludCovMatrixM2.getDeterminant();
 
+    //加权最小二乘
     while (error >= LEAST_SQUARE_PSEUDOLITE_POSITIONING_METERS && calTimes > 0) {
       RealMatrix geometryMatrix = new Array2DRowRealMatrix(calculateGeometryMatrix(
           indoorAntennasXyz, positionSolution));
@@ -567,8 +498,8 @@ class PseudolitePositioningLeastSquare {
       }
 
       error = 0.0;
-      for (int i = 0; i < 3; ++i) {
-        error += Math.pow(deltaPosition[i], 2);
+      for (double dp : deltaPosition) {
+        error += Math.pow(dp, 2);
       }
       error = Math.sqrt(error);
       Log.d("伪卫星最小二乘", "第"+(100-calTimes)+"次迭代--error="+error);

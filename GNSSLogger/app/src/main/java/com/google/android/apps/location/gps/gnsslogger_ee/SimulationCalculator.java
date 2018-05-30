@@ -35,6 +35,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -215,13 +217,10 @@ public class SimulationCalculator {
   }
 
   protected String[] readEph() {
-    int satelliteNum = 7;
     int oneSatelliteLineNum = 8;
-    String[] eph = new String[satelliteNum * oneSatelliteLineNum];
+    ArrayList<String> ephList = new ArrayList<>();
     String line;
     boolean hasPassHeader = false;
-
-    int lineCount = 0;
 
     try {
 
@@ -229,12 +228,27 @@ public class SimulationCalculator {
       InputStreamReader in = new InputStreamReader(inputStream);
       BufferedReader br = new BufferedReader(in);
 
-      while (lineCount < satelliteNum * oneSatelliteLineNum) {
-        line = br.readLine();
+      HashSet<Integer> set = new HashSet<>();
+      line = br.readLine();
+      while (line != null) {
         if (!hasPassHeader) {
           hasPassHeader = line.contains("END OF HEADER");
+          line = br.readLine();
         } else {
-          eph[lineCount++] = line;
+          int prn = Integer.parseInt(line.substring(0, 2).trim());
+          if (set.contains(prn)) {
+            for (int i = 0; i < oneSatelliteLineNum && line != null; ++i) {
+              line = br.readLine();
+            }
+          } else {
+            set.add(prn);
+            ephList.add(line);
+            for (int i = 0; i < oneSatelliteLineNum - 1 && line != null; ++i) {
+              line = br.readLine();
+              ephList.add(line);
+            }
+            line = br.readLine();
+          }
         }
       }
       br.close();
@@ -244,7 +258,9 @@ public class SimulationCalculator {
       return null;
     }
 
+    String[] eph = new String[ephList.size()];
+    ephList.toArray(eph);
+
     return eph;
   }
-
 }
