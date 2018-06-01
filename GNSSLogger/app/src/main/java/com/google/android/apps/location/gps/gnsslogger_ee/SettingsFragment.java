@@ -50,41 +50,13 @@ public class SettingsFragment extends Fragment {
 
   public static final String TAG = ":SettingsFragment";
 
-  /** Position in the drop down menu of the auto ground truth mode */
-  private static int AUTO_GROUND_TRUTH_MODE = 3;
-
   /** Key in the {@link SharedPreferences} indicating whether auto-scroll has been enabled */
   protected static String PREFERENCE_KEY_AUTO_SCROLL =  "autoScroll";
 
   private GnssContainer mGpsContainer;
 
-  /**
-   * The {@link RealTimePositionVelocityCalculator} set for receiving the ground truth mode switch
-   */
-  private RealTimePositionVelocityCalculator mRealTimePositionVelocityCalculator;
-
-  /** User selection of ground truth mode, initially set to be disabled */
-  private int mResidualSetting = RealTimePositionVelocityCalculator.RESIDUAL_MODE_DISABLED;
-
-  /** The reference ground truth location by user input. */
-  private double[] mFixedReferenceLocation = null;
-
-  /** {@link GroundTruthModeSwitcher} to receive update from AR result broadcast */
-  private GroundTruthModeSwitcher mModeSwitcher;
-
   public void setGpsContainer(GnssContainer value) {
     mGpsContainer = value;
-  }
-
-  /** Set up {@link MainActivity} to receive update from AR result broadcast */
-  public void setAutoModeSwitcher(GroundTruthModeSwitcher modeSwitcher) {
-    mModeSwitcher = modeSwitcher;
-  }
-
-  /** Set up {@code RealTimePositionVelocityCalculator} for receiving changes in ground truth mode*/
-  public void setRealTimePositionVelocityCalculator(
-      RealTimePositionVelocityCalculator realTimePositionVelocityCalculator) {
-    mRealTimePositionVelocityCalculator = realTimePositionVelocityCalculator;
   }
 
   @Override

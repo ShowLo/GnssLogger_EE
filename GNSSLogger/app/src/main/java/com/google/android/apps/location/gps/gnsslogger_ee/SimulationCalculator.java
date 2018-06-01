@@ -27,8 +27,13 @@ import android.os.HandlerThread;
 import android.util.Log;
 
 import com.google.android.apps.location.gps.gnsslogger_ee.SimulationFragment.UiSimulationFragmentComponent;
+import com.google.location.lbs.gnss.gps.pseudorange.PseudoliteMessageStore;
 import com.google.location.lbs.gnss.gps.pseudorange.PseudolitePositioningFromSimulationEvents;
 import com.google.location.lbs.gnss.gps.pseudorange.SimulationGpsMeasurementsEvent;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -91,6 +96,8 @@ public class SimulationCalculator {
             try {
               mPseudolitePositioningFromSimulationEvents =
                   new PseudolitePositioningFromSimulationEvents();
+              mPseudolitePositioningFromSimulationEvents.setEph(readEph());
+              mPseudolitePositioningFromSimulationEvents.setPseudoliteMessageStore(readPseudoliteMessage());
             } catch (Exception e) {
               Log.e(
                   GnssContainer.TAG,
@@ -129,7 +136,6 @@ public class SimulationCalculator {
               return;
             }
             try {
-              mPseudolitePositioningFromSimulationEvents.setEph(readEph());
               mPseudolitePositioningFromSimulationEvents
                   .computePseudolitePositioningSolutionsFromSimulation(event);
 
@@ -262,5 +268,76 @@ public class SimulationCalculator {
     ephList.toArray(eph);
 
     return eph;
+  }
+
+  protected PseudoliteMessageStore readPseudoliteMessage() {
+    PseudoliteMessageStore pseudoliteMessageStore = new PseudoliteMessageStore();
+
+    try {
+      InputStream inputStream = mContext.getResources().openRawResource(R.raw.pseudoliteinfo);
+      InputStreamReader in = new InputStreamReader(inputStream);
+      BufferedReader br = new BufferedReader(in);
+
+      StringBuilder stringBuilder = new StringBuilder();
+      String line = br.readLine();
+      while(line != null) {
+        stringBuilder.append(line + "\n");
+        line = br.readLine();
+      }
+
+      JSONObject jsonObject = new JSONObject(stringBuilder.toString());
+      // 获取室外天线位置
+      JSONArray outdoorAntennaLlaArray = jsonObject.getJSONArray("outdoorAntennaLla");
+      double[] outdoorAntennaLla = new double[outdoorAntennaLlaArray.length()];
+      for(int i = 0; i < outdoorAntennaLlaArray.length(); ++i) {
+        outdoorAntennaLla[i] = (Double) outdoorAntennaLlaArray.get(i);
+      }
+      pseudoliteMessageStore.setOutdoorAntennaLla(outdoorAntennaLla);
+
+      // 获取卫星id
+      JSONArray satelliteIdArray = jsonObject.getJSONArray("satelliteId");
+      int[] satelliteId = new int[satelliteIdArray.length()];
+      for (int i = 0; i < satelliteIdArray.length(); ++i) {
+        satelliteId[i] = (Integer) satelliteIdArray.get(i);
+      }
+      pseudoliteMessageStore.setSatelliteId(satelliteId);
+
+      JSONArray indoorAntennaXyzArray = jsonObject.getJSONArray("indoorAntennaXyz");
+      int rowNum = indoorAntennaXyzArray.length();
+      int colNum = indoorAntennaXyzArray.getJSONArray(0).length();
+      double[][] indoorAntennaXyz = new double[rowNum][colNum];
+      for(int i = 0; i < rowNum; ++i) {
+        JSONArray indoorAntennaXyzI = indoorAntennaXyzArray.getJSONArray(i);
+        for (int j = 0; j < colNum; ++j) {
+          indoorAntennaXyz[i][j] = (Double) indoorAntennaXyzI.get(j);
+        }
+      }
+      pseudoliteMessageStore.setIndoorAntennasXyz(indoorAntennaXyz);
+
+      JSONArray outdoorToIndoorRangeArray = jsonObject.getJSONArray("outdoorToIndoorRange");
+      double[] outdoorToIndoorRange = new double[outdoorToIndoorRangeArray.length()];
+      for (int i = 0; i < outdoorToIndoorRangeArray.length(); ++i) {
+        outdoorToIndoorRange[i] = (Double) outdoorToIndoorRangeArray.get(i);
+      }
+      pseudoliteMessageStore.setOutdoorToIndoorRange(outdoorToIndoorRange);
+
+      JSONArray channelDelayArray = jsonObject.getJSONArray("channelDelay");
+      double[] channelDelay = new double[channelDelayArray.length()];
+      for (int i = 0; i < channelDelayArray.length(); ++i) {
+        channelDelay[i] = (Double) channelDelayArray.get(i);
+      }
+      pseudoliteMessageStore.setChannelDelay(channelDelay);
+
+    } catch (IOException ioe) {
+      ioe.printStackTrace();
+      Log.d("SimulationCalculator", "读取伪卫星配置文件出错");
+      return null;
+    } catch (JSONException je) {
+      je.printStackTrace();
+      Log.d("SimulationCalculator", "读取伪卫星配置文件构造json出错");
+      return null;
+    }
+
+    return pseudoliteMessageStore;
   }
 }

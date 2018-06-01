@@ -67,11 +67,6 @@ public class MainActivity extends AppCompatActivity
   private static final int NUMBER_OF_FRAGMENTS = 8;
   private static final int FRAGMENT_INDEX_SETTING = 0;
   private static final int FRAGMENT_INDEX_LOGGER = 1;
-  //private static final int FRAGMENT_INDEX_LOGGER_LOCATION = 2;
-  //private static final int FRAGMENT_INDEX_LOGGER_MEASUREMENT = 3;
-  //private static final int FRAGMENT_INDEX_LOGGER_NAVIGATION = 4;
-  /*private static final int FRAGMENT_INDEX_LOGGER_GNSSSTATUS = 5;
-  private static final int FRAGMENT_INDEX_LOGGER_NMEA = 6;*/
   private static final int FRAGMENT_INDEX_POSITION = 2;
   private static final int FRAGMENT_INDEX_PSEUDOLITE = 3;
   private static final int FRAGMENT_INDEX_PLOT = 4;
@@ -82,11 +77,6 @@ public class MainActivity extends AppCompatActivity
 
   private GnssContainer mGnssContainer;
   private UiLogger mUiLogger;
-/*  private UiLoggerLocation mUiLoggerLocation;
-  private UiLoggerMeasurement mUiLoggerMeasurement;
-  private UiLoggerNavigation mUiLoggerNavigation;
-  private UiLoggerGnssStatus mUiLoggerGnssStatus;
-  private UiLoggerNmea mUiLoggerNmea;*/
   //private RealTimePositionVelocityCalculator mRealTimePositionVelocityCalculator;
   private PositionCalculator mPositionCalculator;
   private PseudolitePositionCalculator mPseudolitePositionCalculator;
@@ -94,15 +84,9 @@ public class MainActivity extends AppCompatActivity
   private FileLogger mFileLogger;
   private FileLoggerPseudolite mFileLoggerPseudolite;
   private FileLoggerSimulation mFileLoggerSimulation;
-  // for test
-  /*private TestCalculator mTestCalculator;
-  private FileLoggerPseudolite mFileTest;*/
 
   private Fragment[] mFragments;
   private GoogleApiClient mGoogleApiClient;
-  /*private boolean mAutoSwitchGroundTruthMode;
-  private final ActivityDetectionBroadcastReceiver mBroadcastReceiver =
-      new ActivityDetectionBroadcastReceiver();*/
 
   @Override
   protected void onStart() {
@@ -112,15 +96,10 @@ public class MainActivity extends AppCompatActivity
   @Override
   protected void onResume() {
     super.onResume();
-    /*LocalBroadcastManager.getInstance(this)
-        .registerReceiver(
-            mBroadcastReceiver, new IntentFilter(
-                DetectedActivitiesIntentReceiver.AR_RESULT_BROADCAST_ACTION));*/
   }
 
   @Override
   protected void onPause() {
-    //LocalBroadcastManager.getInstance(this).unregisterReceiver(mBroadcastReceiver);
     super.onPause();
   }
 
@@ -143,9 +122,6 @@ public class MainActivity extends AppCompatActivity
     editor.putBoolean(SettingsFragment.PREFERENCE_KEY_AUTO_SCROLL, false);
     editor.commit();
     super.onCreate(savedInstanceState);
-    /*//在使用SDK各组件之前初始化context信息，传入ApplicationContext
-    //注意该方法要再setContentView方法之前实现
-    SDKInitializer.initialize(getApplicationContext());*/
     setContentView(R.layout.activity_main);
     buildGoogleApiClient();
     requestPermissionAndSetupFragments(this);
@@ -206,16 +182,6 @@ public class MainActivity extends AppCompatActivity
           return mFragments[FRAGMENT_INDEX_SETTING];
         case FRAGMENT_INDEX_LOGGER:
           return mFragments[FRAGMENT_INDEX_LOGGER];
-        /*case FRAGMENT_INDEX_LOGGER_LOCATION:
-          return mFragments[FRAGMENT_INDEX_LOGGER_LOCATION];
-        case FRAGMENT_INDEX_LOGGER_MEASUREMENT:
-          return mFragments[FRAGMENT_INDEX_LOGGER_MEASUREMENT];
-        case FRAGMENT_INDEX_LOGGER_NAVIGATION:
-          return mFragments[FRAGMENT_INDEX_LOGGER_NAVIGATION];*/
-        /*case FRAGMENT_INDEX_LOGGER_GNSSSTATUS:
-          return mFragments[FRAGMENT_INDEX_LOGGER_GNSSSTATUS];
-        case FRAGMENT_INDEX_LOGGER_NMEA:
-          return mFragments[FRAGMENT_INDEX_LOGGER_NMEA];*/
         case FRAGMENT_INDEX_POSITION:
           return mFragments[FRAGMENT_INDEX_POSITION];
         case FRAGMENT_INDEX_PSEUDOLITE:
@@ -228,8 +194,6 @@ public class MainActivity extends AppCompatActivity
           return mFragments[FRAGMENT_INDEX_PLOT_PSEUDOLITE];
         case FRAGMENT_INDEX_SIMULATION:
           return mFragments[FRAGMENT_INDEX_SIMULATION];
-        /*case FRAGMENT_INDEX_TEST:
-          return mFragments[FRAGMENT_INDEX_TEST];*/
         default:
           throw new IllegalArgumentException("Invalid section: " + position);
       }
@@ -249,20 +213,8 @@ public class MainActivity extends AppCompatActivity
           return getString(R.string.title_settings).toUpperCase(locale);
         case FRAGMENT_INDEX_LOGGER:
           return getString(R.string.title_log).toUpperCase(locale);
-        /*case FRAGMENT_INDEX_LOGGER_LOCATION:
-          return getString(R.string.title_log_location).toUpperCase(locale);
-        case FRAGMENT_INDEX_LOGGER_MEASUREMENT:
-          return getString(R.string.title_log_measurement).toUpperCase(locale);
-        case FRAGMENT_INDEX_LOGGER_NAVIGATION:
-          return getString(R.string.title_log_navigation).toUpperCase(locale);*/
-        /*case FRAGMENT_INDEX_LOGGER_GNSSSTATUS:
-          return getString(R.string.title_log_gnssStatus).toUpperCase(locale);
-        case FRAGMENT_INDEX_LOGGER_NMEA:
-          return getString(R.string.title_log_nmea).toUpperCase(locale);*/
         case FRAGMENT_INDEX_POSITION:
           return getString(R.string.title_position).toUpperCase(locale);
-        /*case FRAGMENT_INDEX_RESULT:
-          return getString(R.string.title_offset).toUpperCase(locale);*/
         case FRAGMENT_INDEX_PSEUDOLITE:
           return getString(R.string.title_pseudolite).toUpperCase(locale);
         case FRAGMENT_INDEX_PLOT:
@@ -273,8 +225,6 @@ public class MainActivity extends AppCompatActivity
           return getString(R.string.title_plot_pseudolite).toUpperCase(locale);
         case FRAGMENT_INDEX_SIMULATION:
           return getString(R.string.title_simulation).toUpperCase(locale);
-        /*case FRAGMENT_INDEX_TEST:
-          return getString(R.string.title_test).toUpperCase(locale);*/
         default:
           return super.getPageTitle(position);
       }
@@ -294,23 +244,13 @@ public class MainActivity extends AppCompatActivity
 
   private void setupFragments() {
     mUiLogger = new UiLogger();
-    /*mUiLoggerLocation = new UiLoggerLocation();
-    mUiLoggerMeasurement = new UiLoggerMeasurement();
-    mUiLoggerNavigation = new UiLoggerNavigation();*/
-    /*mUiLoggerGnssStatus = new UiLoggerGnssStatus();
-    mUiLoggerNmea = new UiLoggerNmea();*/
-
-    /*mRealTimePositionVelocityCalculator = new RealTimePositionVelocityCalculator();
-    mRealTimePositionVelocityCalculator.setMainActivity(this);
-    mRealTimePositionVelocityCalculator.setResidualPlotMode(
-        RealTimePositionVelocityCalculator.RESIDUAL_MODE_DISABLED, null *//* fixedGroundTruth *//*);*/
 
     mPositionCalculator = new PositionCalculator();
     mPositionCalculator.setMainActivity(this);
 
     mFileLoggerPseudolite = new FileLoggerPseudolite(getApplicationContext());
 
-    mPseudolitePositionCalculator = new PseudolitePositionCalculator();
+    mPseudolitePositionCalculator = new PseudolitePositionCalculator(getApplicationContext());
     mPseudolitePositionCalculator.setMainActivity(this);
     mPseudolitePositionCalculator.setFileLoggerPseudolite(mFileLoggerPseudolite);
 
@@ -320,28 +260,14 @@ public class MainActivity extends AppCompatActivity
     mSimulationCalculator.setMainActivity(this);
     mSimulationCalculator.setFileLoggerSimulation(mFileLoggerSimulation);
 
-    //for test
-    /*mFileTest = new FileLoggerPseudolite(getApplicationContext());
-    mTestCalculator = new TestCalculator();
-    mTestCalculator.setMainActivity(this);
-    mTestCalculator.setFileLoggerPseudolite(mFileTest);*/
-
-
     mFileLogger = new FileLogger(getApplicationContext());
     mGnssContainer =
         new GnssContainer(
             getApplicationContext(),
             mUiLogger,
-            //mUiLoggerLocation,
-            //mUiLoggerMeasurement,
-            //mUiLoggerNavigation,
-            //mUiLoggerGnssStatus,
-            //mUiLoggerNmea,
             mFileLogger,
             mPositionCalculator,
             mPseudolitePositionCalculator
-            //mTestCalculator,
-            //mRealTimePositionVelocityCalculator
             );
     mGnssContainer.setSimulationCalculator(mSimulationCalculator);
 
@@ -357,33 +283,9 @@ public class MainActivity extends AppCompatActivity
     loggerFragment.setFileLogger(mFileLogger);
     mFragments[FRAGMENT_INDEX_LOGGER] = loggerFragment;
 
-    /*LoggerOneFragment loggerLocationFragment = new LoggerOneFragment();
-    loggerLocationFragment.setUiLogger(mUiLoggerLocation);
-    mFragments[FRAGMENT_INDEX_LOGGER_LOCATION] = loggerLocationFragment;
-
-    LoggerOneFragment loggerMeasurementFragment = new LoggerOneFragment();
-    loggerMeasurementFragment.setUiLogger(mUiLoggerMeasurement);
-    mFragments[FRAGMENT_INDEX_LOGGER_MEASUREMENT] = loggerMeasurementFragment;
-
-    LoggerOneFragment loggerNavigationFragment = new LoggerOneFragment();
-    loggerNavigationFragment.setUiLogger(mUiLoggerNavigation);
-    mFragments[FRAGMENT_INDEX_LOGGER_NAVIGATION] = loggerNavigationFragment;*/
-
-    /*LoggerOneFragment loggerGnssStatusFragment = new LoggerOneFragment();
-    loggerGnssStatusFragment.setUiLogger(mUiLoggerGnssStatus);
-    mFragments[FRAGMENT_INDEX_LOGGER_GNSSSTATUS] = loggerGnssStatusFragment;
-
-    LoggerOneFragment loggerNmeaFragment = new LoggerOneFragment();
-    loggerNmeaFragment.setUiLogger(mUiLoggerNmea);
-    mFragments[FRAGMENT_INDEX_LOGGER_NMEA] = loggerNmeaFragment;*/
-
     ResultFragment positionFragment = new ResultFragment();
     positionFragment.setPositionCalculator(mPositionCalculator);
     mFragments[FRAGMENT_INDEX_POSITION] = positionFragment;
-
-    /*ResultFragment resultFragment = new ResultFragment();
-    resultFragment.setPositionVelocityCalculator(mRealTimePositionVelocityCalculator);
-    mFragments[FRAGMENT_INDEX_RESULT] = resultFragment;*/
 
     PseudoliteFragment pseudoliteFragment = new PseudoliteFragment();
     pseudoliteFragment.setPseudolitePositionCalculator(mPseudolitePositionCalculator);
@@ -407,13 +309,6 @@ public class MainActivity extends AppCompatActivity
     simulationFragment.setSimulationCalculator(mSimulationCalculator);
     simulationFragment.setmFileLoggerSimulation(mFileLoggerSimulation);
     mFragments[FRAGMENT_INDEX_SIMULATION] = simulationFragment;
-
-    //for test
-    /*TestFragment testFragment = new TestFragment();
-    testFragment.setTestCalculator(mTestCalculator);
-    testFragment.setFileLoggerPseudolite(mFileTest);
-    mFragments[FRAGMENT_INDEX_TEST] = testFragment;*/
-
 
     // The viewpager that will host the section contents.
     ViewPager viewPager = (ViewPager) findViewById(R.id.pager);

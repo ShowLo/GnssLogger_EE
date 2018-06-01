@@ -78,7 +78,11 @@ public class PseudolitePositioningFromRealTimeEvents {
   private GpsNavMessageProto mGpsNavMessageProtoUsed = null;
 
   // information of pseudolites 伪卫星信息
-  private PseudoliteMessageStore mPseudoliteMessageStore = new PseudoliteMessageStore();
+  private PseudoliteMessageStore mPseudoliteMessageStore;// = new PseudoliteMessageStore();
+
+  public void setPseudoliteMessageStore(PseudoliteMessageStore pseudoliteMessageStore) {
+    this.mPseudoliteMessageStore = pseudoliteMessageStore;
+  }
 
   // API KEY
   private String elevationApiKey = "AIzaSyC3KoyXGV0yxGKEvT-WU1ioz64wzlXoUDY";
@@ -102,8 +106,11 @@ public class PseudolitePositioningFromRealTimeEvents {
   private static final int SUPL_SERVER_PORT = 7276;
 
   // 是否从文件中读取星历
-  private boolean readEphFromFile = true;
-  private static final String ephFileName = "EphL1_2018-01-18_A1.txt";
+  private boolean readEphFromFile = false;
+  private String[] ephFile;
+  public void setEph(String[] ephFile) {
+    this.ephFile = ephFile;
+  }
 
   private double[] mRawPseudorangesMeters =
       GpsMathOperations.createAndFillArray(
@@ -309,7 +316,7 @@ public class PseudolitePositioningFromRealTimeEvents {
 
     if (readEphFromFile) {
       // 用文件提供的星历
-      mGpsNavMessageProtoUsed = readEph();
+      mGpsNavMessageProtoUsed = getEph();
     } else {
       // check if we should continue using the navigation message from the SUPL server, or use the
       // navigation message from the device if we fully received it
@@ -563,125 +570,118 @@ public class PseudolitePositioningFromRealTimeEvents {
     mReferenceLocation[2] = altE7;
   }
 
-  protected GpsNavMessageProto readEph() {
+  protected GpsNavMessageProto getEph() {
     GpsNavMessageProto eph = new GpsNavMessageProto();
     String line;
-    boolean hasPassHeader = false;
-    int satelliteNum = 7;
-    int satelliteCount = 0;
 
     ArrayList<GpsEphemerisProto> gpsEphemerisProtoList = new ArrayList<>();
 
-    try {
-      BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(ephFileName)));
-      while (satelliteCount < satelliteNum) {
-        line = br.readLine();
-        if (!hasPassHeader) {
-          hasPassHeader = line.contains("END OF HEADER");
-        } else {
-          GpsEphemerisProto gpsEphemerisProtoObj = new GpsEphemerisProto();
-          int prn = Integer.parseInt(line.substring(0, 2));
-          gpsEphemerisProtoObj.prn = prn;
-          int year = Integer.parseInt(line.substring(2, 6));
-          if (year < 80) {
-            year += 2000;
-          } else {
-            year += 1900;
-          }
-          int month = Integer.parseInt(line.substring(6, 9));
-          int day = Integer.parseInt(line.substring(9, 12));
-          int hour = Integer.parseInt(line.substring(12, 15));
-          int minute = Integer.parseInt(line.substring(15, 18));
-          double second = Double.parseDouble(line.substring(18, 22));
-          DateTime utcDateTime = new DateTime(year, month, day, hour, minute,
-              (int) second, (int) (second * 1000) % 1000, DateTimeZone.UTC);
-          GpsTime mGpsTime = GpsTime.fromUtc(utcDateTime);
-          gpsEphemerisProtoObj.toc = mGpsTime.getGpsWeekSecond().second;
-          double af0 = Double.parseDouble(line.substring(22, 41));
-          gpsEphemerisProtoObj.af0 = af0;
-          double af1 = Double.parseDouble(line.substring(41, 60));
-          gpsEphemerisProtoObj.af1 = af1;
-          double af2 = Double.parseDouble(line.substring(60, 79));
-          gpsEphemerisProtoObj.af2 = af2;
+    int i = 0;
 
-          line = br.readLine();
-          double iode = Double.parseDouble(line.substring(3, 22));
-          gpsEphemerisProtoObj.iode = (int)iode;
-          double crs = Double.parseDouble(line.substring(22, 41));
-          gpsEphemerisProtoObj.crs = crs;
-          double delta_n = Double.parseDouble(line.substring(41, 60));
-          gpsEphemerisProtoObj.deltaN = delta_n;
-          double m0 = Double.parseDouble(line.substring(60, 79));
-          gpsEphemerisProtoObj.m0 = m0;
-
-          line = br.readLine();
-          double cuc = Double.parseDouble(line.substring(3, 22));
-          gpsEphemerisProtoObj.cuc = cuc;
-          double e = Double.parseDouble(line.substring(22, 41));
-          gpsEphemerisProtoObj.e = e;
-          double cus = Double.parseDouble(line.substring(41, 60));
-          gpsEphemerisProtoObj.cus = cus;
-          double asqrt = Double.parseDouble(line.substring(60, 79));
-          gpsEphemerisProtoObj.rootOfA = asqrt;
-
-          line = br.readLine();
-          double toe = Double.parseDouble(line.substring(3, 22));
-          gpsEphemerisProtoObj.toe = toe;
-          double cic = Double.parseDouble(line.substring(22, 41));
-          gpsEphemerisProtoObj.cic = cic;
-          double omega0 = Double.parseDouble(line.substring(41, 60));
-          gpsEphemerisProtoObj.omega0 = omega0;
-          double cis = Double.parseDouble(line.substring(60, 79));
-          gpsEphemerisProtoObj.cis = cis;
-
-          line = br.readLine();
-          double i0 = Double.parseDouble(line.substring(3, 22));
-          gpsEphemerisProtoObj.i0 = i0;
-          double crc = Double.parseDouble(line.substring(22, 41));
-          gpsEphemerisProtoObj.crc = crc;
-          double omega = Double.parseDouble(line.substring(41, 60));
-          gpsEphemerisProtoObj.omega = omega;
-          double omegaDot = Double.parseDouble(line.substring(60, 79));
-          gpsEphemerisProtoObj.omegaDot = omegaDot;
-
-          line = br.readLine();
-          double idot = Double.parseDouble(line.substring(3, 22));
-          gpsEphemerisProtoObj.iDot = idot;
-          double codeL2 = Double.parseDouble(line.substring(22, 41));
-          gpsEphemerisProtoObj.l2Code = (int)codeL2;
-          double gpsWeek = Double.parseDouble(line.substring(41, 60));
-          gpsEphemerisProtoObj.week = (int)gpsWeek;
-          double l2Pdata = Double.parseDouble(line.substring(60, 79));
-          // 这里是否对应不确定
-          gpsEphemerisProtoObj.l2Flag = (int)l2Pdata;
-
-          line = br.readLine();
-          double accuracy = Double.parseDouble(line.substring(3, 22));
-          gpsEphemerisProtoObj.svAccuracyM = accuracy;
-          double health = Double.parseDouble(line.substring(22, 41));
-          gpsEphemerisProtoObj.svHealth = (int)health;
-          double tgd = Double.parseDouble(line.substring(41, 60));
-          gpsEphemerisProtoObj.tgd = tgd;
-          double iodc = Double.parseDouble(line.substring(60, 79));
-          gpsEphemerisProtoObj.iodc = (int)iodc;
-
-          line = br.readLine();
-          // ttx貌似没有对应的
-          double ttx = Double.parseDouble(line.substring(3, 22));
-          double fitInterval = Double.parseDouble(line.substring(22, 41));
-          gpsEphemerisProtoObj.fitInterval = fitInterval;
-
-          gpsEphemerisProtoList.add(gpsEphemerisProtoObj);
-          ++satelliteCount;
-        }
+    while (i < ephFile.length) {
+      line = ephFile[i++];
+      GpsEphemerisProto gpsEphemerisProtoObj = new GpsEphemerisProto();
+      int prn = Integer.parseInt(line.substring(0, 2).trim());
+      gpsEphemerisProtoObj.prn = prn;
+      int year = Integer.parseInt(line.substring(2, 6).trim());
+      if (year < 80) {
+        year += 2000;
+      } else {
+        year += 1900;
       }
-      br.close();
-    } catch (IOException ioe) {
-      Log.d(TAG, "读取星历文件出错");
-      return null;
+      int month = Integer.parseInt(line.substring(6, 9).trim());
+      int day = Integer.parseInt(line.substring(9, 12).trim());
+      int hour = Integer.parseInt(line.substring(12, 15).trim());
+      int minute = Integer.parseInt(line.substring(15, 18).trim());
+      double second = Double.parseDouble(line.substring(18, 22).trim());
+      DateTime utcDateTime = new DateTime(year, month, day, hour, minute,
+          (int) second, (int) (second * 1000) % 1000, DateTimeZone.UTC);
+      GpsTime mGpsTime = GpsTime.fromUtc(utcDateTime);
+      gpsEphemerisProtoObj.toc = mGpsTime.getGpsWeekSecond().second;
+      double af0 = Double.parseDouble(line.substring(22, 41).trim());
+      gpsEphemerisProtoObj.af0 = af0;
+      double af1 = Double.parseDouble(line.substring(41, 60).trim());
+      gpsEphemerisProtoObj.af1 = af1;
+      double af2 = Double.parseDouble(line.substring(60, 79).trim());
+      gpsEphemerisProtoObj.af2 = af2;
+
+      line = ephFile[i++];
+      double iode = Double.parseDouble(line.substring(3, 22).trim());
+      gpsEphemerisProtoObj.iode = (int) iode;
+      double crs = Double.parseDouble(line.substring(22, 41).trim());
+      gpsEphemerisProtoObj.crs = crs;
+      double delta_n = Double.parseDouble(line.substring(41, 60).trim());
+      gpsEphemerisProtoObj.deltaN = delta_n;
+      double m0 = Double.parseDouble(line.substring(60, 79).trim());
+      gpsEphemerisProtoObj.m0 = m0;
+
+      line = ephFile[i++];
+      double cuc = Double.parseDouble(line.substring(3, 22).trim());
+      gpsEphemerisProtoObj.cuc = cuc;
+      double e = Double.parseDouble(line.substring(22, 41).trim());
+      gpsEphemerisProtoObj.e = e;
+      double cus = Double.parseDouble(line.substring(41, 60).trim());
+      gpsEphemerisProtoObj.cus = cus;
+      double asqrt = Double.parseDouble(line.substring(60, 79).trim());
+      gpsEphemerisProtoObj.rootOfA = asqrt;
+
+      line = ephFile[i++];
+      double toe = Double.parseDouble(line.substring(3, 22).trim());
+      gpsEphemerisProtoObj.toe = toe;
+      double cic = Double.parseDouble(line.substring(22, 41).trim());
+      gpsEphemerisProtoObj.cic = cic;
+      double omega0 = Double.parseDouble(line.substring(41, 60).trim());
+      gpsEphemerisProtoObj.omega0 = omega0;
+      double cis = Double.parseDouble(line.substring(60, 79).trim());
+      gpsEphemerisProtoObj.cis = cis;
+
+      line = ephFile[i++];
+      double i0 = Double.parseDouble(line.substring(3, 22).trim());
+      gpsEphemerisProtoObj.i0 = i0;
+      double crc = Double.parseDouble(line.substring(22, 41).trim());
+      gpsEphemerisProtoObj.crc = crc;
+      double omega = Double.parseDouble(line.substring(41, 60).trim());
+      gpsEphemerisProtoObj.omega = omega;
+      double omegaDot = Double.parseDouble(line.substring(60, 79).trim());
+      gpsEphemerisProtoObj.omegaDot = omegaDot;
+
+      line = ephFile[i++];
+      double idot = Double.parseDouble(line.substring(3, 22).trim());
+      gpsEphemerisProtoObj.iDot = idot;
+      double codeL2 = Double.parseDouble(line.substring(22, 41).trim());
+      gpsEphemerisProtoObj.l2Code = (int) codeL2;
+      double gpsWeek = Double.parseDouble(line.substring(41, 60).trim());
+      gpsEphemerisProtoObj.week = (int) gpsWeek;
+      double l2Pdata = Double.parseDouble(line.substring(60, 79).trim());
+      // 这里是否对应不确定
+      gpsEphemerisProtoObj.l2Flag = (int) l2Pdata;
+
+      line = ephFile[i++];
+      double accuracy = Double.parseDouble(line.substring(3, 22).trim());
+      gpsEphemerisProtoObj.svAccuracyM = accuracy;
+      double health = Double.parseDouble(line.substring(22, 41).trim());
+      gpsEphemerisProtoObj.svHealth = (int) health;
+      double tgd = Double.parseDouble(line.substring(41, 60).trim());
+      gpsEphemerisProtoObj.tgd = tgd;
+      double iodc = Double.parseDouble(line.substring(60, 79).trim());
+      gpsEphemerisProtoObj.iodc = (int) iodc;
+
+      line = ephFile[i++];
+      // ttx貌似没有对应的
+      double ttx = Double.parseDouble(line.substring(3, 22).trim());
+      double fitInterval = Double.parseDouble(line.substring(22, 41).trim());
+      gpsEphemerisProtoObj.fitInterval = fitInterval;
+
+      gpsEphemerisProtoList.add(gpsEphemerisProtoObj);
+
     }
 
     IonosphericModelProto iono = new IonosphericModelProto();
+    double[] alpha = {0.0, 0.0, 0.0, 0.0};
+    iono.alpha = alpha;
+    double[] beta = {0.0, 0.0, 0.0, 0.0};
+    iono.beta = beta;
+
     eph.iono = iono;
     eph.ephemerids =
         gpsEphemerisProtoList.toArray(new GpsEphemerisProto[gpsEphemerisProtoList.size()]);

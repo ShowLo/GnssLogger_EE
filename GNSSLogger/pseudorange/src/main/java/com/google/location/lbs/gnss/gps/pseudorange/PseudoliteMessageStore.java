@@ -15,16 +15,36 @@ public class PseudoliteMessageStore {
   private HashMap<String, HashMap<String, double[]>> info;
 
   // 室外接收天线位置
-  private final double[] outdoorAntennaLla = {40.0, 118.0, 100.0};
+  private double[] outdoorAntennaLla;// = {40.0, 118.0, 100.0};
   // 卫星id
-  private final int[] satelliteId = {3, 23, 19, 10};
+  private int[] satelliteId = {3, 23, 19, 10};
   // 室内伪卫星位置
-  private final double[][] indoorAntennasXyz = {{1.509, -6.977, 2.781},
-      {4.307, 2.591, 2.696}, {-4.867, 5.233, 2.598}, {-10.229, -1.914, 2.598}};
+  private double[][] indoorAntennasXyz;// = {{1.509, -6.977, 2.781},
+      //{4.307, 2.591, 2.696}, {-4.867, 5.233, 2.598}, {-10.229, -1.914, 2.598}};
   // 各天线长度
-  private final double[] outdoorToIndoorRange = {12.0, 12.0, 16.0, 16.0};
+  private double[] outdoorToIndoorRange;// = {12.0, 12.0, 16.0, 16.0};
   // 各通道延时
-  private final double[] channelDelay = {10.0, 20.0, 30.0, 0.0};
+  private double[] channelDelay;// = {10.0, 20.0, 30.0, 0.0};
+
+  public void setOutdoorAntennaLla(double[] outdoorAntennaLla) {
+    this.outdoorAntennaLla = outdoorAntennaLla;
+  }
+
+  public void setSatelliteId(int[] satelliteId) {
+    this.satelliteId = satelliteId;
+  }
+
+  public void setIndoorAntennasXyz(double[][] indoorAntennasXyz) {
+    this.indoorAntennasXyz = indoorAntennasXyz;
+  }
+
+  public void setOutdoorToIndoorRange(double[] outdoorToIndoorRange) {
+    this.outdoorToIndoorRange = outdoorToIndoorRange;
+  }
+
+  public void setChannelDelay(double[] channelDelay) {
+    this.channelDelay = channelDelay;
+  }
 
   public double[] getOutdoorAntennaLla() {
     return outdoorAntennaLla;

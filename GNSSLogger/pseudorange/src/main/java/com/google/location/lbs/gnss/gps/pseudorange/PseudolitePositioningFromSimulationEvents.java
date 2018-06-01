@@ -67,7 +67,10 @@ public class PseudolitePositioningFromSimulationEvents {
   private GpsNavMessageProto mGpsNavMessageProtoUsed = null;
 
   // information of pseudolites 伪卫星信息
-  private PseudoliteMessageStore mPseudoliteMessageStore = new PseudoliteMessageStore();
+  private PseudoliteMessageStore mPseudoliteMessageStore;// = new PseudoliteMessageStore();
+  public void setPseudoliteMessageStore(PseudoliteMessageStore pseudoliteMessageStore) {
+    this.mPseudoliteMessageStore = pseudoliteMessageStore;
+  }
 
   // API KEY
   private String elevationApiKey = "AIzaSyC3KoyXGV0yxGKEvT-WU1ioz64wzlXoUDY";
@@ -89,7 +92,6 @@ public class PseudolitePositioningFromSimulationEvents {
 
   // 是否从文件中读取星历
   private boolean readEphFromFile = true;
-  private static final String ephFileName = "EphL1_2018-01-18_A1.txt";
 
   private double[] mCn0DbHz =
       GpsMathOperations.createAndFillArray(
