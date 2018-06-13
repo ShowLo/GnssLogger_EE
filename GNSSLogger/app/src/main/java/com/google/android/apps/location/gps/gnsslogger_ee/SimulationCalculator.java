@@ -96,7 +96,9 @@ public class SimulationCalculator {
             try {
               mPseudolitePositioningFromSimulationEvents =
                   new PseudolitePositioningFromSimulationEvents();
+              // 从文件读星历并设置
               mPseudolitePositioningFromSimulationEvents.setEph(readEph());
+              // 从文件读伪卫星信息并设置
               mPseudolitePositioningFromSimulationEvents.setPseudoliteMessageStore(readPseudoliteMessage());
             } catch (Exception e) {
               Log.e(
@@ -143,6 +145,7 @@ public class SimulationCalculator {
                   new Runnable() {
                     @Override
                     public void run() {
+                      // 更新各种图
                       long timeSeconds = TimeUnit.NANOSECONDS.toSeconds(event.getClock().getTimeNanos());
                       mPlotSimulationFragment.updateCn0DbHzTab(
                           mPseudolitePositioningFromSimulationEvents.getCn0DbHz(), timeSeconds);
@@ -166,7 +169,7 @@ public class SimulationCalculator {
                           mPseudolitePositioningFromSimulationEvents.getAntennaToUserPseudorangesRateMps(), timeSeconds);
                       double[] positionXYZ = mPseudolitePositioningFromSimulationEvents.getPseudolitePositioningSolutionXYZ();
                       mPlotSimulationFragment.updatePositionTab(positionXYZ[0], positionXYZ[1]);
-                      mPlotSimulationFragment.updateHeightTab(positionXYZ[2], timeSeconds);
+                      mPlotSimulationFragment.updateHeightTab(positionXYZ[2]);
                     }
                   }
               );
@@ -222,6 +225,7 @@ public class SimulationCalculator {
     this.mMainActivity = mainActivity;
   }
 
+  // 从文件中读取星历
   protected String[] readEph() {
     int oneSatelliteLineNum = 8;
     ArrayList<String> ephList = new ArrayList<>();
@@ -270,6 +274,7 @@ public class SimulationCalculator {
     return eph;
   }
 
+  // 从配置文件中读取伪卫星信息
   protected PseudoliteMessageStore readPseudoliteMessage() {
     PseudoliteMessageStore pseudoliteMessageStore = new PseudoliteMessageStore();
 

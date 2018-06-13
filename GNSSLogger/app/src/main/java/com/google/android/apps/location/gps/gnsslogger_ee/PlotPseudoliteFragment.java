@@ -104,6 +104,8 @@ public class PlotPseudoliteFragment extends Fragment {
   /** The X range of the plot, we are keeping the latest one minute visible */
   private static final double TIME_INTERVAL_SECONDS = 60;
 
+  private static final int HEIGHT_TAB_INTERVAL = 100;
+
   /** Data format used to format the data in the text view */
   private static final DecimalFormat sDataFormat =
       new DecimalFormat("##.#", new DecimalFormatSymbols(Locale.US));
@@ -400,7 +402,7 @@ public class PlotPseudoliteFragment extends Fragment {
    * @param timeInSeconds the time at which measurements are received
    */
   private int epoch = 0;
-  protected void updateHeightTab(double height, double timeInSeconds) {
+  protected void updateHeightTab(double height) {
     if (!Double.isNaN(height)) {
       mPositionManager.addValue(epoch++, height, HEIGHT_TAB - POSITION_TAB);
       if (height < minYAndMaxY[HEIGHT_TAB][0]) {
@@ -414,6 +416,10 @@ public class PlotPseudoliteFragment extends Fragment {
       double extraSpaceY = (minYAndMaxY[HEIGHT_TAB][1] - minYAndMaxY[HEIGHT_TAB][0]) / 10;
       mCurrentRenderer.setYAxisMin(minYAndMaxY[HEIGHT_TAB][0] - extraSpaceY);
       mCurrentRenderer.setYAxisMax(minYAndMaxY[HEIGHT_TAB][1] + extraSpaceY);
+
+      if (epoch - mCurrentRenderer.getXAxisMin() > HEIGHT_TAB_INTERVAL) {
+        mCurrentRenderer.setXAxisMin(epoch - HEIGHT_TAB_INTERVAL);
+      }
     }
 
     mCurrentRenderer.setXAxisMax(epoch);
@@ -592,6 +598,11 @@ public class PlotPseudoliteFragment extends Fragment {
     private final XYMultipleSeriesRenderer[] mRendererList;
     private final Context mContext;
     private boolean[] isFirstTime;
+    private int posNum = 0;
+    private int epochNum = 0;
+    private double centerX = 0;
+    private double centerY = 0;
+    private double centerZ = 0;
 
     public PositionManager(int numOfTabs, Context context) {
       mDataSetList = new XYMultipleSeriesDataset[numOfTabs];
@@ -631,10 +642,44 @@ public class PlotPseudoliteFragment extends Fragment {
         tempRenderer.setPointStyle(PointStyle.CIRCLE);
         tempRenderer.setFillPoints(true);
         tempRenderer.setColor(Color.parseColor("#222222"));
-        tempRenderer.setLineWidth(5);
         mRendererList[index].addSeriesRenderer(tempRenderer);
+        if (index == 0) {
+          // 中心点
+          centerX = x;
+          centerY = y;
+          ++posNum;
+          XYSeries centerSeries = new XYSeries("Center Point");
+          centerSeries.add(centerX, centerY);
+          mDataSetList[index].addSeries(centerSeries);
+          XYSeriesRenderer centerRenderer = new XYSeriesRenderer();
+          centerRenderer.setPointStyle(PointStyle.CIRCLE);
+          centerRenderer.setFillPoints(true);
+          centerRenderer.setColor(Color.parseColor("#FF0000"));
+          mRendererList[index].addSeriesRenderer(centerRenderer);
+        } else {
+          centerZ = y;
+          ++epochNum;
+          XYSeries centerSeries = new XYSeries("Center Height");
+          centerSeries.add(x, centerZ);
+          mDataSetList[index].addSeries(centerSeries);
+          XYSeriesRenderer centerRenderer = new XYSeriesRenderer();
+          centerRenderer.setPointStyle(PointStyle.CIRCLE);
+          centerRenderer.setFillPoints(true);
+          centerRenderer.setColor(Color.parseColor("#FF0000"));
+          mRendererList[index].addSeriesRenderer(centerRenderer);
+        }
       } else {
         mDataSetList[index].getSeriesAt(0).add(x, y);
+        if (index == 0) {
+          centerX = (centerX * posNum + x) / (posNum + 1);
+          centerY = (centerY * posNum + y) / (posNum + 1);
+          mDataSetList[index].getSeriesAt(1).remove(0);
+          mDataSetList[index].getSeriesAt(1).add(centerX, centerY);
+          ++posNum;
+        } else {
+          centerZ = (centerZ * epochNum + y) / (epochNum + 1);
+          mDataSetList[index].getSeriesAt(1).add(x, centerZ);
+        }
       }
     }
 

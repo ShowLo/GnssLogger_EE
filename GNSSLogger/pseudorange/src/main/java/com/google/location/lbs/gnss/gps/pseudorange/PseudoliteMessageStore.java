@@ -12,12 +12,10 @@ import java.util.HashMap;
  * 储存伪卫星信息，包括室外接收天线和室内转发天线的位置
  */
 public class PseudoliteMessageStore {
-  private HashMap<String, HashMap<String, double[]>> info;
-
   // 室外接收天线位置
   private double[] outdoorAntennaLla;// = {40.0, 118.0, 100.0};
   // 卫星id
-  private int[] satelliteId = {3, 23, 19, 10};
+  private int[] satelliteId;// = {3, 23, 19, 10};
   // 室内伪卫星位置
   private double[][] indoorAntennasXyz;// = {{1.509, -6.977, 2.781},
       //{4.307, 2.591, 2.696}, {-4.867, 5.233, 2.598}, {-10.229, -1.914, 2.598}};

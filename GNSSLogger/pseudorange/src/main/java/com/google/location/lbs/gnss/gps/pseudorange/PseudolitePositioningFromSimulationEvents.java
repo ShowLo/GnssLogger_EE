@@ -478,6 +478,7 @@ public class PseudolitePositioningFromSimulationEvents {
     Log.d(TAG, "Estimated Receiver clock offset in meters: " + positionSolution[3]);
   }
 
+  // 之前从文件中读到的星历信息（字符串类型）在这里解成对应数据类型
   protected GpsNavMessageProto getEph() {
     GpsNavMessageProto eph = new GpsNavMessageProto();
     String line;

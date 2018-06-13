@@ -191,6 +191,7 @@ public class PseudolitePositionCalculator implements GnssListener {
                   new Runnable() {
                     @Override
                     public void run() {
+                      // 更新各种图
                       long timeSeconds = TimeUnit.NANOSECONDS.toSeconds(event.getClock().getTimeNanos());
                       mPlotPseudoliteFragment.updateRawPseudorangesTab(
                           mPseudolitePositioningFromRealTimeEvents.getRawPseudorangesMeters(), timeSeconds);
@@ -210,6 +211,9 @@ public class PseudolitePositionCalculator implements GnssListener {
                           mPseudolitePositioningFromRealTimeEvents.getAntennaToSatPseudorangesRateMps(), timeSeconds);
                       mPlotPseudoliteFragment.updateAntennaToUserPseudorangesRateTab(
                           mPseudolitePositioningFromRealTimeEvents.getAntennaToUserPseudorangesRateMps(), timeSeconds);
+                      double[] positionXYZ = mPseudolitePositioningFromRealTimeEvents.getPseudolitePositioningSolutionXYZ();
+                      mPlotPseudoliteFragment.updatePositionTab(positionXYZ[0], positionXYZ[1]);
+                      mPlotPseudoliteFragment.updateHeightTab(positionXYZ[2]);
                     }
                   }
               );
@@ -287,6 +291,7 @@ public class PseudolitePositionCalculator implements GnssListener {
   @Override
   public void onTTFFReceived(long l) {}
 
+  // 从文件中读取星历
   protected String[] readEph() {
     int oneSatelliteLineNum = 8;
     ArrayList<String> ephList = new ArrayList<>();
@@ -335,6 +340,7 @@ public class PseudolitePositionCalculator implements GnssListener {
     return eph;
   }
 
+  // 从配置文件中读取伪卫星信息
   protected PseudoliteMessageStore readPseudoliteMessage() {
     PseudoliteMessageStore pseudoliteMessageStore = new PseudoliteMessageStore();
 
@@ -392,7 +398,6 @@ public class PseudolitePositionCalculator implements GnssListener {
         channelDelay[i] = (Double) channelDelayArray.get(i);
       }
       pseudoliteMessageStore.setChannelDelay(channelDelay);
-
     } catch (IOException ioe) {
       ioe.printStackTrace();
       Log.d("PseudolitePositionCalculator", "读取伪卫星配置文件出错");

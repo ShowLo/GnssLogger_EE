@@ -339,6 +339,8 @@ public class GnssContainer {
       public void run() {
         super.run();
         try {
+          boolean firstMeasurement = true;
+          long elapsedRealtime = 0;
           String line = null;
           if (bufferedReader != null) {
             line = bufferedReader.readLine();
@@ -471,6 +473,15 @@ public class GnssContainer {
                   break;
                 }
               }
+
+              if (firstMeasurement) {
+                elapsedRealtime = elapsedRealtimeMillis;
+                firstMeasurement = false;
+              } else {
+                Thread.sleep(elapsedRealtimeMillis - elapsedRealtime);
+                elapsedRealtime = elapsedRealtimeMillis;
+              }
+
               gpsMeasurementsEvent.setSimulationGpsMeasurements(
                   Collections.unmodifiableCollection(simulationGpsMeasurements));
 
@@ -478,7 +489,6 @@ public class GnssContainer {
                   gpsMeasurementsEvent
               );
 
-              Thread.sleep(2000);
             } else {
               line = bufferedReader.readLine();
             }
